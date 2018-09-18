@@ -1,0 +1,26 @@
+{
+  "name": "terepac-worker-mqtt-hydrant",
+  "version": "0.1.1",
+  "description": "Hydrant Worker",
+  "main": "server.js",
+  "directories": {
+    "lib": "lib"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://terepac_dp@bitbucket.org/terepac/terepac-worker-mqtt-hydrant.git"
+  },
+  "keywords": [
+    "nodejs"
+  ],
+  "author": "Darryl Patterson",
+  "license": "LicenseRef-LICENSE",
+  "homepage": "https://bitbucket.org/terepac/terepac-worker-mqtt-hydrant#readme",
+  "dependencies": {
+    "mongoose": "^5.2.15",
+    "mqtt": "^2.18.8"
+  }
+}
