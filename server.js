@@ -65,7 +65,7 @@ client.on('message', function (topic, message) {
                 data.max = decoded.value;
                 data.avg = decoded.value;
                 data.point = decoded.value;
-                queryDevice(amqp, data, deviceId);
+                handleData(amqp, data, deviceId);
                 break;
             case 'temperature':
                 data.sensorType = 2;
@@ -73,7 +73,7 @@ client.on('message', function (topic, message) {
                 data.max = decoded.value;
                 data.avg = decoded.value;
                 data.point = decoded.value;
-                queryDevice(amqp, data, deviceId);
+                handleData(amqp, data, deviceId);
                 break;
             case 'battery':
                 data.sensorType = 4;
@@ -81,11 +81,12 @@ client.on('message', function (topic, message) {
                 data.max = decoded.value;
                 data.avg = decoded.value;
                 data.point = decoded.value;
-                queryDevice(amqp, data, deviceId);
+                handleData(amqp, data, deviceId);
                 break;
             case 'reset':
                 break;
             case 'location':
+                updateGeolocation(deviceId, decoded.latitude, decoded.longitude);
                 break;
             case 'pressure-event':
                 break;
@@ -93,7 +94,7 @@ client.on('message', function (topic, message) {
     });
 });
 
-function queryDevice(amqp, data, deviceId) {
+function handleData(amqp, data, deviceId) {
     //console.log('Querying the deviceId ' + deviceId);
 
     Device.findOne({ serialNumber: deviceId })
@@ -107,18 +108,6 @@ function queryDevice(amqp, data, deviceId) {
 
             queueDatabase(amqp, device, data);
         });
-/*
-    let devicePromise = Device.findOne({ serialNumber: deviceId }).populate('client').exec();
-    devicePromise.then(function (device){
-        console.log('Device queried: ' + deviceId);
-        if (device === null) {
-            console.log('Device not found, serialNumber ' + deviceId);
-            return;
-        }
-
-        queueDatabase(amqp, device, data);
-    }).catch(console.warn);
-    */
 }
 
 
@@ -204,3 +193,62 @@ function buildMessage(asset, device, data, callback) {
     });
 
 }
+
+function updateGeolocation(deviceId, latitude, longitude) {
+
+    Device.update(
+        { serialNumber: deviceId },
+        {
+            $set: {
+                'geolocation.coordinates': [latitude, longitude]
+            }
+        }, function(err, device) {
+            if (!device || err) {
+                console.log('No device found: ' + err);
+                return;
+            }
+            Location.update(
+                { _id: device.location },
+                {
+                    $set: {
+                        'geolocation.coordinates': [latitude, longitude]
+                    }
+                }, function (err, location) {
+                    if (!location || err) {
+                        console.log('Error updating the location coordinates: ' + err);
+                    }
+                }
+            )
+        }
+    );
+}
+
+/**
+ * Handle the different ways an application can shutdown
+ */
+
+function handleAppExit (options, err) {
+    if (err) {
+        console.log(err.stack);
+    }
+
+    if (options.cleanup) {
+        // Cleamup
+    }
+
+    if (options.exit) {
+        process.exit();
+    }
+}
+
+process.on('exit', handleAppExit.bind(null, {
+    cleanup: true
+}));
+
+process.on('SIGINT', handleAppExit.bind(null, {
+    exit: true
+}));
+
+process.on('uncaughtException', handleAppExit.bind(null, {
+    exit: true
+}));
