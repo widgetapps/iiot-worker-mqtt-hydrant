@@ -6,4 +6,4 @@ node_modules/
 public/lib
 .bower-*/
 .idea/
-env/development.js
+env/local.js

@@ -20,6 +20,7 @@
   "license": "LicenseRef-LICENSE",
   "homepage": "https://bitbucket.org/terepac/terepac-worker-mqtt-hydrant#readme",
   "dependencies": {
+    "cbor": "^4.1.1",
     "mongoose": "^5.2.15",
     "mqtt": "^2.18.8"
   }
