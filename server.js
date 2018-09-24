@@ -40,7 +40,7 @@ client.on('message', function (topic, message) {
 
     let validTypes = ['pressure', 'temperature', 'battery','reset', 'location', 'pressure-event'];
 
-    if (!_.contains(validTypes, type)) {
+    if (!_.includes(validTypes, type)) {
         return;
     }
 
