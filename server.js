@@ -8,7 +8,10 @@ let config = require('./config'),
     mongoose = require('mongoose'),
     _ = require('lodash'),
     mqtt = require('mqtt'),
-    cbor = require('cbor');
+    cbor = require('cbor'),
+    Device = require('@terepac/terepac-models').Device,
+    Asset = require('@terepac/terepac-models').Asset,
+    Sensor = require('@terepac/terepac-models').Sensor;
 
 mongoose.Promise = global.Promise;
 mongoose.connect(config.db, function(err) {
