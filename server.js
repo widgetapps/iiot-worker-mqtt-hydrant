@@ -95,6 +95,7 @@ function queryDevice(amqp, data, deviceId) {
         { serialNumber: deviceId })
         .populate('client')
         .exec(function (err, device) {
+            console.log('Device queried: ' + deviceId);
             if (!device || err) {
                 console.log('Device not found');
                 return;
