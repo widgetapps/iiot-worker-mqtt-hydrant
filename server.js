@@ -208,8 +208,7 @@ function updateGeolocation(deviceId, latitude, longitude) {
                 console.log('No device found: ' + err);
                 return;
             }
-            Location.update(
-                { _id: device.location },
+            Location.findByIdAndUpdate(device.location,
                 {
                     $set: {
                         'geolocation.coordinates': [latitude, longitude]
