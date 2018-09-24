@@ -10,7 +10,7 @@ let config = require('./config'),
     mqtt = require('mqtt'),
     cbor = require('cbor'),
     Device = require('@terepac/terepac-models').Device,
-    Asset = require('@terepac/terepac-models').Asset,
+    Asset  = require('@terepac/terepac-models').Asset,
     Sensor = require('@terepac/terepac-models').Sensor;
 
 mongoose.Promise = global.Promise;
@@ -84,6 +84,8 @@ client.on('message', function (topic, message) {
             case 'pressure-event':
                 break;
         }
+
+        console.log('Querying the deviceId ' + deviceId);
 
         let devicePromise = Device.findOne({ serialNumber: deviceId }).populate('client').exec();
         devicePromise.then(function (device){
