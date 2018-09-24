@@ -87,6 +87,7 @@ client.on('message', function (topic, message) {
 
         var devicePromise = Device.findOne({ serialNumber: deviceId }).populate('client').exec();
         devicePromise.then(function (device){
+            console.log('Device queried: ' + devicdeId);
             if (device === null) {
                 console.log('Device not found, serialNumber ' + deviceId);
                 return;
