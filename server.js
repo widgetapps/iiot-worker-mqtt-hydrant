@@ -85,6 +85,7 @@ client.on('message', function (topic, message) {
                 handleData(amqp, data, deviceId);
                 break;
             case 'reset':
+                deviceResetLog(deviceId, decoded);
                 break;
             case 'location':
                 updateGeolocation(deviceId, decoded.latitude, decoded.longitude);
@@ -225,6 +226,19 @@ function updateGeolocation(deviceId, latitude, longitude) {
             )
         }
     );
+}
+
+function deviceResetLog(deviceId, data) {
+    Device.findOneAndUpdate(
+        { serialNumber: deviceId },
+        { $push: { resets: data  } },
+        function (error, success) {
+            if (error) {
+                //console.log(error);
+            } else {
+                //console.log(success);
+            }
+        });
 }
 
 /**
