@@ -55,7 +55,7 @@ client.on('message', function (topic, message) {
         }
 
         let data = {
-            date: new Date(decoded.date)
+            timestamp: new Date(decoded.date)
         };
 
         switch (type) {
