@@ -14,7 +14,7 @@ let config = require('./config'),
     Sensor = require('@terepac/terepac-models').Sensor;
 
 mongoose.Promise = global.Promise;
-mongoose.connect(config.db, config.dbOptions, function(err) {
+mongoose.connect(config.db, function(err) {
     if (err) {
         console.log('Error connecting to MongoDB.');
     } else {
