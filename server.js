@@ -66,11 +66,6 @@ client.on('message', function (topic, message) {
                 data.sensorType = 2;
                 break;
             case 'battery':
-                console.log('Device ID: ' + deviceId);
-                console.log('Version: ' + version);
-                console.log('Type: ' + type);
-
-                console.log(JSON.stringify(decoded));
                 data.sensorType = 4;
                 data.min = decoded.value;
                 data.max = decoded.value;
@@ -89,12 +84,12 @@ client.on('message', function (topic, message) {
 });
 
 function queryDevice(amqp, data, deviceId) {
-    console.log('Querying the deviceId ' + deviceId);
+    //console.log('Querying the deviceId ' + deviceId);
 
     Device.findOne({ serialNumber: deviceId })
         .populate('client')
         .exec(function (err, device) {
-            console.log('Device queried: ' + deviceId);
+            //console.log('Device queried: ' + deviceId);
             if (!device || err) {
                 console.log('Device not found');
                 return;
@@ -118,23 +113,23 @@ function queryDevice(amqp, data, deviceId) {
 
 
 function queueDatabase(amqp, device, data) {
-    console.log('Queueing data: ' + JSON.stringify(data));
+    //console.log('Queueing data: ' + JSON.stringify(data));
     amqp.then (function(conn) {
-        console.log('AMQP connection established');
+        //console.log('AMQP connection established');
         return conn.createChannel();
     }).then (function(ch) {
 
         let assetPromise = Asset.findById(device.asset).populate('location').exec();
 
         assetPromise.then(function (asset) {
-            console.log('Sending data to queue...');
+            //console.log('Sending data to queue...');
             let q = 'telemetry';
             let ok = ch.assertQueue(q, {durable: true});
             return ok.then(function() {
                 buildMessage(asset, device, data, function(document){
 
-                    //ch.sendToQueue(q, new Buffer(JSON.stringify(document)), {persistent: true});
-                    console.log(JSON.stringify(document));
+                    ch.sendToQueue(q, new Buffer(JSON.stringify(document)), {persistent: true});
+                    //console.log(JSON.stringify(document));
 
                     return ch.close();
                 });
