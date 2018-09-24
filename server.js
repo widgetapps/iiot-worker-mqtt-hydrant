@@ -9,9 +9,10 @@ let config = require('./config'),
     _ = require('lodash'),
     mqtt = require('mqtt'),
     cbor = require('cbor'),
-    Device = require('@terepac/terepac-models').Device,
-    Asset  = require('@terepac/terepac-models').Asset,
-    Sensor = require('@terepac/terepac-models').Sensor;
+    Device   = require('@terepac/terepac-models').Device,
+    Asset    = require('@terepac/terepac-models').Asset,
+    Sensor   = require('@terepac/terepac-models').Sensor,
+    Location = require('@terepac/terepac-models').Location;
 
 mongoose.Promise = global.Promise;
 mongoose.connect(config.db, config.dbOptions, function(err) {
