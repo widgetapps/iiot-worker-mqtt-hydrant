@@ -46,7 +46,7 @@ client.on('message', function (topic, message) {
 
     cbor.decodeFirst(message, function(err, decoded) {
 
-        if (err != null_) {
+        if (err !== null) {
             console.log('Error decoding CBOR: ' + err);
             return;
         }
