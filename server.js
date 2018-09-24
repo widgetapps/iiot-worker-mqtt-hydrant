@@ -119,7 +119,7 @@ function queryDevice(amqp, data, deviceId) {
 
 function queueDatabase(amqp, device, data) {
     console.log('Queueing data: ' + JSON.stringify(data));
-    console.log('DEVICE: ' + JSON.stringify(devide));
+    console.log('DEVICE: ' + JSON.stringify(device));
     amqp.then (function(conn) {
         console.log('AMQP connection established');
         return conn.createChannel();
