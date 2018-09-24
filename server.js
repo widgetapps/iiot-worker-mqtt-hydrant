@@ -85,9 +85,9 @@ client.on('message', function (topic, message) {
                 break;
         }
 
-        var devicePromise = Device.findOne({ serialNumber: deviceId }).populate('client').exec();
+        let devicePromise = Device.findOne({ serialNumber: deviceId }).populate('client').exec();
         devicePromise.then(function (device){
-            console.log('Device queried: ' + devicdeId);
+            console.log('Device queried: ' + deviceId);
             if (device === null) {
                 console.log('Device not found, serialNumber ' + deviceId);
                 return;
@@ -106,7 +106,7 @@ function queueDatabase(amqp, device, data) {
         return conn.createChannel();
     }).then (function(ch) {
 
-        var assetPromise = Asset.findOne({ _id: device.asset }).populate('location').exec();
+        let assetPromise = Asset.findOne({ _id: device.asset }).populate('location').exec();
 
         assetPromise.then(function (asset) {
             onsole.log('Sending data to queue...');
@@ -127,7 +127,7 @@ function queueDatabase(amqp, device, data) {
 
 function buildMessage(asset, device, data) {
 
-    var promise = Sensor.findOne({ type: data.sensorType }).exec();
+    let promise = Sensor.findOne({ type: data.sensorType }).exec();
     promise.then(function (sensor) {
 
         let document = {
