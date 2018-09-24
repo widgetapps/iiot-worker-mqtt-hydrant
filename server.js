@@ -61,9 +61,19 @@ client.on('message', function (topic, message) {
         switch (type) {
             case 'pressure':
                 data.sensorType = 1;
+                data.min = decoded.value;
+                data.max = decoded.value;
+                data.avg = decoded.value;
+                data.point = decoded.value;
+                queryDevice(amqp, data, deviceId);
                 break;
             case 'temperature':
                 data.sensorType = 2;
+                data.min = decoded.value;
+                data.max = decoded.value;
+                data.avg = decoded.value;
+                data.point = decoded.value;
+                queryDevice(amqp, data, deviceId);
                 break;
             case 'battery':
                 data.sensorType = 4;
