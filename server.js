@@ -197,7 +197,7 @@ function buildMessage(asset, device, data, callback) {
 
 function updateGeolocation(deviceId, latitude, longitude) {
 
-    Device.update(
+    Device.findOneAndUpdate(
         { serialNumber: deviceId },
         {
             $set: {
@@ -209,6 +209,9 @@ function updateGeolocation(deviceId, latitude, longitude) {
                 console.log('No device found: ' + err);
                 return;
             }
+
+            if (device.location === null) return;
+
             Location.findByIdAndUpdate(device.location,
                 {
                     $set: {
