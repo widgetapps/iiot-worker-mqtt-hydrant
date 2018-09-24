@@ -76,6 +76,7 @@ client.on('message', function (topic, message) {
                 data.max = decoded.value;
                 data.avg = decoded.value;
                 data.point = decoded.value;
+                queryDevice(amqp, data, deviceId);
                 break;
             case 'reset':
                 break;
@@ -84,21 +85,24 @@ client.on('message', function (topic, message) {
             case 'pressure-event':
                 break;
         }
-
-        console.log('Querying the deviceId ' + deviceId);
-
-        let devicePromise = Device.findOne({ serialNumber: deviceId }).populate('client').exec();
-        devicePromise.then(function (device){
-            console.log('Device queried: ' + deviceId);
-            if (device === null) {
-                console.log('Device not found, serialNumber ' + deviceId);
-                return;
-            }
-
-            queueDatabase(amqp, device, data);
-        }).catch(console.warn);
     });
 });
+
+function queryDevice(amqp, data, deviceId) {
+    console.log('Querying the deviceId ' + deviceId);
+
+    let devicePromise = Device.findOne({ serialNumber: deviceId }).populate('client').exec();
+    devicePromise.then(function (device){
+        console.log('Device queried: ' + deviceId);
+        if (device === null) {
+            console.log('Device not found, serialNumber ' + deviceId);
+            return;
+        }
+
+        queueDatabase(amqp, device, data);
+    }).catch(console.warn);
+}
+
 
 function queueDatabase(amqp, device, data) {
     console.log('Queueing data: ' + JSON.stringify(data));
