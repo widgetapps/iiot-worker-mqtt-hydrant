@@ -91,6 +91,18 @@ client.on('message', function (topic, message) {
 function queryDevice(amqp, data, deviceId) {
     console.log('Querying the deviceId ' + deviceId);
 
+    Device.findOne(
+        { serialNumber: deviceId })
+        .populate('client')
+        .exec(function (err, device) {
+            if (!device || err) {
+                console.log('Device not found');
+                return;
+            }
+
+            queueDatabase(amqp, device, data);
+        });
+/*
     let devicePromise = Device.findOne({ serialNumber: deviceId }).populate('client').exec();
     devicePromise.then(function (device){
         console.log('Device queried: ' + deviceId);
@@ -101,6 +113,7 @@ function queryDevice(amqp, data, deviceId) {
 
         queueDatabase(amqp, device, data);
     }).catch(console.warn);
+    */
 }
 
 
