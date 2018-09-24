@@ -36,10 +36,7 @@ client.on('connect', function () {
 });
 
 client.on('message', function (topic, message) {
-    let theSplit = topic.split('/');
-    let deviceId = theSplit[0];
-    let version  = theSplit[1];
-    let type     = theSplit[2];
+    let [deviceId, version, type] = topic.split('/');
 
     let validTypes = ['pressure', 'temperature', 'battery','reset', 'location', 'pressure-event'];
 
