@@ -2,6 +2,8 @@
 
 require('./init')();
 
+console.log('Version: ' + process.version);
+
 let config = require('./config'),
     mongoose = require('mongoose'),
     _ = require('lodash'),
