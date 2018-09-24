@@ -119,7 +119,6 @@ function queryDevice(amqp, data, deviceId) {
 
 function queueDatabase(amqp, device, data) {
     console.log('Queueing data: ' + JSON.stringify(data));
-    console.log('DEVICE: ' + JSON.stringify(device));
     amqp.then (function(conn) {
         console.log('AMQP connection established');
         return conn.createChannel();
@@ -128,9 +127,9 @@ function queueDatabase(amqp, device, data) {
         let assetPromise = Asset.findById(device.asset).populate('location').exec();
 
         assetPromise.then(function (asset) {
-            onsole.log('Sending data to queue...');
-            var q = 'telemetry';
-            var ok = ch.assertQueue(q, {durable: true});
+            console.log('Sending data to queue...');
+            let q = 'telemetry';
+            let ok = ch.assertQueue(q, {durable: true});
             return ok.then(function() {
                 let document = buildMessage(asset, device, data);
 
