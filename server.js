@@ -131,19 +131,20 @@ function queueDatabase(amqp, device, data) {
             let q = 'telemetry';
             let ok = ch.assertQueue(q, {durable: true});
             return ok.then(function() {
-                let document = buildMessage(asset, device, data);
+                buildMessage(asset, device, data, function(document){
 
-                //ch.sendToQueue(q, new Buffer(JSON.stringify(document)), {persistent: true});
-                console.log(JSON.stringify(document));
+                    //ch.sendToQueue(q, new Buffer(JSON.stringify(document)), {persistent: true});
+                    console.log(JSON.stringify(document));
 
-                return ch.close();
+                    return ch.close();
+                });
             }).catch(console.warn);
         }).catch(console.warn);
 
     }).catch(console.warn);
 }
 
-function buildMessage(asset, device, data) {
+function buildMessage(asset, device, data, callback) {
 
     let promise = Sensor.findOne({ type: data.sensorType }).exec();
     promise.then(function (sensor) {
@@ -193,7 +194,7 @@ function buildMessage(asset, device, data) {
             }
         };
 
-        return document;
+        callback(document);
 
     });
 
