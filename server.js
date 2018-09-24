@@ -91,8 +91,7 @@ client.on('message', function (topic, message) {
 function queryDevice(amqp, data, deviceId) {
     console.log('Querying the deviceId ' + deviceId);
 
-    Device.findOne(
-        { serialNumber: deviceId })
+    Device.findOne({ serialNumber: deviceId })
         .populate('client')
         .exec(function (err, device) {
             console.log('Device queried: ' + deviceId);
