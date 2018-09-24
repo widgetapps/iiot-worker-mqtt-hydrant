@@ -125,7 +125,7 @@ function queueDatabase(amqp, device, data) {
         return conn.createChannel();
     }).then (function(ch) {
 
-        let assetPromise = Asset.findOne({ _id: device.asset }).populate('location').exec();
+        let assetPromise = Asset.findById(device.asset).populate('location').exec();
 
         assetPromise.then(function (asset) {
             onsole.log('Sending data to queue...');
