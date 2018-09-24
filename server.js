@@ -96,7 +96,7 @@ client.on('message', function (topic, message) {
             }
 
             queueDatabase(amqp, device, data);
-        });
+        }).catch(console.warn);
     });
 });
 
