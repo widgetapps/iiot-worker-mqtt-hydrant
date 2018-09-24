@@ -99,14 +99,14 @@ client.on('message', function (topic, message) {
 
 function queueDatabase(amqp, device, data) {
     amqp.then (function(conn) {
-        //console.log('AMQP connection established');
+        console.log('AMQP connection established');
         return conn.createChannel();
     }).then (function(ch) {
 
         var assetPromise = Asset.findOne({ _id: device.asset }).populate('location').exec();
 
         assetPromise.then(function (asset) {
-            //console.log('Sending data to queue...');
+            onsole.log('Sending data to queue...');
             var q = 'telemetry';
             var ok = ch.assertQueue(q, {durable: true});
             return ok.then(function() {
