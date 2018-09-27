@@ -138,6 +138,7 @@ function handlePressureEventData(amqp, deviceId, data){
     // If this is the first part, create the array element
     if (data.part[0] === 1) {
         console.log('First pressure event part received. Part ' + data.part[0]);
+        console.log('First data: ' + JSON.stringify(data.value));
         if (key in pressureEventBuffer) {
             delete pressureEventBuffer[key];
         }
