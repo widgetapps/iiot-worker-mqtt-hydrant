@@ -138,6 +138,7 @@ function handlePressureEventData(amqp, deviceId, data){
     // If this is the first part, create the array element
     if (data.part[0] === 1) {
         console.log('First pressure event part received. Part ' + data.part[0] + ' with ' + data.value.length + ' values.');
+        console.log('KEY: ' + key);
         if (key in pressureEventBuffer) {
             delete pressureEventBuffer[key];
         }
@@ -154,6 +155,7 @@ function handlePressureEventData(amqp, deviceId, data){
     // If this is the last part, append and pub values
     if (data.part[0] === pressureEventBuffer[key].parts) {
         console.log('Last part received. Part ' + data.part[0] + ' with ' + data.value.length + ' values.');
+        console.log('KEY: ' + key);
 
         pressureEventBuffer[key].values.push(data.value);
 
@@ -165,6 +167,7 @@ function handlePressureEventData(amqp, deviceId, data){
     // If this is a middle part, just append
     if (data.part[0] < pressureEventBuffer[key].parts) {
         console.log('Received part ' + data.part[0] + ' of ' + data.part[1] + ' parts with ' + data.value.length + ' values.');
+        console.log('KEY: ' + key);
         pressureEventBuffer[key].values.push(data.value);
         return;
     }
