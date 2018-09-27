@@ -160,7 +160,7 @@ function handlePressureEventData(amqp, deviceId, data){
         console.log('Last part received. Part ' + data.part[0] + ' with ' + data.value.length + ' values.');
         console.log('KEY: ' + key);
 
-        pressureEventBuffer[key].values.push(data.value);
+        pressureEventBuffer[key].values = pressureEventBuffer[key].values.concat(data.value);
 
         console.log('Updated number of values: ' + pressureEventBuffer[key].values.length);
 
@@ -173,7 +173,7 @@ function handlePressureEventData(amqp, deviceId, data){
     if (data.part[0] < pressureEventBuffer[key].parts) {
         console.log('Received part ' + data.part[0] + ' of ' + data.part[1] + ' parts with ' + data.value.length + ' values.');
         console.log('KEY: ' + key);
-        pressureEventBuffer[key].values.push(data.value);
+        pressureEventBuffer[key].values = pressureEventBuffer[key].values.concat(data.value);
 
         console.log('Updated number of values: ' + pressureEventBuffer[key].values.length);
 
