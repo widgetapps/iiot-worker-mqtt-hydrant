@@ -213,8 +213,8 @@ function queuePressureEventData(amqp, deviceId, key) {
                         return ok.then(function() {
 
                             documents.forEach(function (document) {
-                                //ch.sendToQueue(q, new Buffer(JSON.stringify(document)), {persistent: true});
-                                console.log(JSON.stringify(document));
+                                ch.sendToQueue(q, new Buffer(JSON.stringify(document)), {persistent: true});
+                                //console.log(JSON.stringify(document));
                             });
 
                             // Done processing, delete the key
@@ -236,6 +236,14 @@ function queuePressureEventData(amqp, deviceId, key) {
 function buildPressureEventDocs(asset, device, key) {
 
     let timestampms = Date.parse(pressureEventBuffer[key].date);
+
+    let sampleRate;
+
+    if (isNaN(pressureEventBuffer[key].rate)) {
+        sampleRate = 10;
+    } else {
+        sampleRate = pressureEventBuffer[key].rate;
+    }
 
     let promise = Sensor.findOne({ type: 1 }).exec();
     return promise.then(function (sensor) {
@@ -294,7 +302,7 @@ function buildPressureEventDocs(asset, device, key) {
 
             documents.push(document);
 
-            timestampms += 50;
+            timestampms += sampleRate;
         }
 
         return documents;
