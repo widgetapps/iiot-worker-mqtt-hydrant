@@ -124,7 +124,7 @@ function handlePressureEventData(amqp, deviceId, data){
         }
 
         pressureEventBuffer[key] = {
-            parts: data.parts[1],
+            parts: data.part[1],
             date: data.date,
             deviceId: deviceId,
             values: data.value
@@ -142,7 +142,7 @@ function handlePressureEventData(amqp, deviceId, data){
         }
 
         pressureEventBuffer[key] = {
-            parts: data.parts[1],
+            parts: data.part[1],
             date: data.date,
             deviceId: deviceId,
             values: data.value
