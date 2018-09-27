@@ -149,6 +149,9 @@ function handlePressureEventData(amqp, deviceId, data){
             deviceId: deviceId,
             values: data.value
         };
+
+        console.log('Updated number of values: ' + pressureEventBuffer[key].values.length);
+
         return;
     }
 
@@ -158,6 +161,8 @@ function handlePressureEventData(amqp, deviceId, data){
         console.log('KEY: ' + key);
 
         pressureEventBuffer[key].values.push(data.value);
+
+        console.log('Updated number of values: ' + pressureEventBuffer[key].values.length);
 
         queuePressureEventData(amqp, deviceId, key);
 
@@ -169,6 +174,9 @@ function handlePressureEventData(amqp, deviceId, data){
         console.log('Received part ' + data.part[0] + ' of ' + data.part[1] + ' parts with ' + data.value.length + ' values.');
         console.log('KEY: ' + key);
         pressureEventBuffer[key].values.push(data.value);
+
+        console.log('Updated number of values: ' + pressureEventBuffer[key].values.length);
+
         return;
     }
 }
