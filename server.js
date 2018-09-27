@@ -230,6 +230,9 @@ function buildPressureEventDocs(asset, device, key) {
         let documents = [];
         let document;
 
+        console.log('Building documents for buffer key ' + key);
+        console.log('Number of documents to process: ' + pressureEventBuffer[key].values.length);
+
         for (let i=0; i < pressureEventBuffer[key].values.length; i++) {
 
             document = {
