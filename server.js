@@ -165,7 +165,7 @@ function handlePressureEventData(amqp, deviceId, data){
     // If this is a middle part, just append
     if (data.part[0] < pressureEventBuffer[key].parts) {
         console.log('Received part ' + data.part[0] + ' of ' + data.part[1] + ' parts.');
-        pressureEventBuffer[key].values.push(data.values);
+        pressureEventBuffer[key].values.push(data.value);
         return;
     }
 }
