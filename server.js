@@ -137,8 +137,8 @@ function handlePressureEventData(amqp, deviceId, data){
 
     // If this is the first part, create the array element
     if (data.part[0] === 1) {
-        console.log('First pressure event part received. Part ' + data.part[0] + ' with ' + data.value.length + ' values.');
-        console.log('KEY: ' + key);
+        //console.log('First pressure event part received. Part ' + data.part[0] + ' with ' + data.value.length + ' values.');
+        //console.log('KEY: ' + key);
         if (key in pressureEventBuffer) {
             delete pressureEventBuffer[key];
         }
@@ -150,19 +150,19 @@ function handlePressureEventData(amqp, deviceId, data){
             values: data.value
         };
 
-        console.log('Updated number of values: ' + pressureEventBuffer[key].values.length);
+        //console.log('Updated number of values: ' + pressureEventBuffer[key].values.length);
 
         return;
     }
 
     // If this is the last part, append and pub values
     if (data.part[0] === pressureEventBuffer[key].parts) {
-        console.log('Last part received. Part ' + data.part[0] + ' with ' + data.value.length + ' values.');
-        console.log('KEY: ' + key);
+        //console.log('Last part received. Part ' + data.part[0] + ' with ' + data.value.length + ' values.');
+        //console.log('KEY: ' + key);
 
         pressureEventBuffer[key].values = pressureEventBuffer[key].values.concat(data.value);
 
-        console.log('Updated number of values: ' + pressureEventBuffer[key].values.length);
+        //console.log('Updated number of values: ' + pressureEventBuffer[key].values.length);
 
         queuePressureEventData(amqp, deviceId, key);
 
@@ -171,11 +171,11 @@ function handlePressureEventData(amqp, deviceId, data){
 
     // If this is a middle part, just append
     if (data.part[0] < pressureEventBuffer[key].parts) {
-        console.log('Received part ' + data.part[0] + ' of ' + data.part[1] + ' parts with ' + data.value.length + ' values.');
-        console.log('KEY: ' + key);
+        //console.log('Received part ' + data.part[0] + ' of ' + data.part[1] + ' parts with ' + data.value.length + ' values.');
+        //console.log('KEY: ' + key);
         pressureEventBuffer[key].values = pressureEventBuffer[key].values.concat(data.value);
 
-        console.log('Updated number of values: ' + pressureEventBuffer[key].values.length);
+        //console.log('Updated number of values: ' + pressureEventBuffer[key].values.length);
 
         return;
     }
@@ -214,7 +214,7 @@ function queuePressureEventData(amqp, deviceId, key) {
 
                             documents.forEach(function (document) {
                                 //ch.sendToQueue(q, new Buffer(JSON.stringify(document)), {persistent: true});
-                                //console.log(JSON.stringify(document));
+                                console.log(JSON.stringify(document));
                             });
 
                             // Done processing, delete the key
@@ -235,19 +235,23 @@ function queuePressureEventData(amqp, deviceId, key) {
 
 function buildPressureEventDocs(asset, device, key) {
 
+    let timestampms = Date.parse(pressureEventBuffer[key].date);
+
     let promise = Sensor.findOne({ type: 1 }).exec();
     return promise.then(function (sensor) {
 
         let documents = [];
         let document;
+        let timestamp;
 
-        console.log('Building documents for buffer key ' + key);
-        console.log('Number of documents to process: ' + pressureEventBuffer[key].values.length);
+        //console.log('Building documents for buffer key ' + key);
+        //console.log('Number of documents to process: ' + pressureEventBuffer[key].values.length);
 
         for (let i=0; i < pressureEventBuffer[key].values.length; i++) {
+            timestamp = new Date(timestampms);
 
             document = {
-                timestamp: pressureEventBuffer[key].date,
+                timestamp: timestamp.toISOString(),
                 tag: {
                     full: asset.location.tagCode + '_' + asset.tagCode + '_' + sensor.tagCode,
                     clientTagCode: device.client.tagCode,
@@ -289,6 +293,8 @@ function buildPressureEventDocs(asset, device, key) {
             };
 
             documents.push(document);
+
+            timestampms += 50;
         }
 
         return documents;
