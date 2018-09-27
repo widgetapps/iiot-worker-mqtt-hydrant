@@ -200,7 +200,7 @@ function queuePressureEventData(amqp, deviceId, key) {
 
                             documents.forEach(function (document) {
                                 //ch.sendToQueue(q, new Buffer(JSON.stringify(document)), {persistent: true});
-                                console.log(JSON.stringify(document));
+                                //console.log(JSON.stringify(document));
                             });
 
                             // Done processing, delete the key
