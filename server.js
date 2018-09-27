@@ -112,7 +112,7 @@ client.on('message', function (topic, message) {
 });
 
 function handlePressureEventData(amqp, deviceId, data){
-    console.log('Pressure event data: ' + JSON.stringify(data));
+    //console.log('Pressure event data: ' + JSON.stringify(data));
 
     let date = new Date(data.date);
     let key = date.getTime() + deviceId;
@@ -137,6 +137,7 @@ function handlePressureEventData(amqp, deviceId, data){
 
     // If this is the first part, create the array element
     if (data.part[0] === 1) {
+        console.log('First pressure event part received. Part ' + data.part[0]);
         if (key in pressureEventBuffer) {
             delete pressureEventBuffer[key];
         }
@@ -152,6 +153,7 @@ function handlePressureEventData(amqp, deviceId, data){
 
     // If this is the last part, append and pub values
     if (data.part[0] === pressureEventBuffer[key].parts) {
+        console.log('Last part received. Part ' + data.part[0]);
 
         pressureEventBuffer[key].values.push(data.value);
 
@@ -162,6 +164,7 @@ function handlePressureEventData(amqp, deviceId, data){
 
     // If this is a middle part, just append
     if (data.part[0] < pressureEventBuffer[key].parts) {
+        console.log('Received part ' + data.part[0] + ' of ' + data.part[1] + ' parts.');
         pressureEventBuffer[key].values.push(data.values);
         return;
     }
