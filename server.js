@@ -112,6 +112,8 @@ client.on('message', function (topic, message) {
 });
 
 function handlePressureEventData(amqp, deviceId, data){
+    console.log('Pressure event data: ' + JSON.stringify(data));
+
     let date = new Date(data.date);
     let key = date.getTime() + deviceId;
 
