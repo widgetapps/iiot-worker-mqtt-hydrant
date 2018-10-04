@@ -68,6 +68,7 @@ client.on('message', function (topic, message) {
                 data.max     = decoded.max;
                 data.avg     = decoded.avg;
                 data.point   = decoded.value;
+                data.current = decoded.value;
                 data.samples = decoded.n;
                 handleData(amqp, data, deviceId);
                 break;
@@ -77,6 +78,7 @@ client.on('message', function (topic, message) {
                 data.max     = null;
                 data.avg     = null;
                 data.point   = decoded.value;
+                data.current = decoded.value;
                 data.samples = null;
                 handleData(amqp, data, deviceId);
                 break;
@@ -86,6 +88,7 @@ client.on('message', function (topic, message) {
                 data.max     = null;
                 data.avg     = null;
                 data.point   = decoded.value;
+                data.current = decoded.value;
                 data.samples = null;
                 handleData(amqp, data, deviceId);
                 break;
@@ -95,6 +98,7 @@ client.on('message', function (topic, message) {
                 data.max     = decoded.max;
                 data.avg     = decoded.avg;
                 data.point   = decoded.value;
+                data.current = decoded.value;
                 data.samples = decoded.n;
                 handleData(amqp, data, deviceId);
                 break;
@@ -295,7 +299,8 @@ function buildPressureEventDocs(asset, device, key) {
                     _id: sensor._id,
                     unit: sensor.unit,
                     values: {
-                        point: pressureEventBuffer[key].values[i]
+                        point: pressureEventBuffer[key].values[i],
+                        current: pressureEventBuffer[key].values[i]
                     }
                 }
             };
@@ -400,6 +405,7 @@ function buildMessage(asset, device, data, callback) {
                     max: data.max,
                     average: data.avg,
                     point: data.point,
+                    current: data.point,
                     samples: data.samples
                 }
             }
