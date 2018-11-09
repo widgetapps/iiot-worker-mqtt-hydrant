@@ -125,7 +125,7 @@ function handlePartData(type, amqp, deviceId, data) {
         return;
     }
 
-    //console.log('Pressure event data: ' + JSON.stringify(data));
+    console.log('Part data of type ' + type + ' received. Part ' + data.part[0] + ' of ' + data.part[1];
 
     let date = new Date(data.date);
     let key = date.getTime() + deviceId;
@@ -150,7 +150,7 @@ function handlePartData(type, amqp, deviceId, data) {
 
     // If this is the first part, create the array element
     if (data.part[0] === 1) {
-        console.log('First pressure event part received. Part ' + data.part[0] + ' with ' + data.value.length + ' values.');
+        console.log('First part received. Part ' + data.part[0] + ' with ' + data.value.length + ' values.');
         //console.log('KEY: ' + key);
         if (key in partBuffer[type]) {
             delete partBuffer[type][key];
@@ -360,7 +360,7 @@ function queueDatabase(amqp, device, data) {
             return ok.then(function() {
                 buildMessage(asset, device, data, function(document){
 
-                    ch.sendToQueue(q, new Buffer(JSON.stringify(document)), {persistent: true});
+                    ch.sendToQueue(q, Buffer.from(JSON.stringify(document)), {persistent: true});
                     //console.log(JSON.stringify(document));
 
                     return ch.close();
