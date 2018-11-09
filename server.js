@@ -27,6 +27,7 @@ let client  = mqtt.connect(config.mqtt, config.mqttoptions);
 let amqp = require('amqplib').connect(config.amqp);
 
 let pressureEventBuffer = [];
+let partBuffer = [];
 
 console.log('Started on IP ' + config.ip + '. NODE_ENV=' + process.env.NODE_ENV);
 
@@ -44,7 +45,7 @@ client.on('connect', function () {
 client.on('message', function (topic, message) {
     let [deviceId, version, type] = topic.split('/');
 
-    let validTypes = ['pressure', 'temperature', 'battery','reset', 'location', 'pressure-event'];
+    let validTypes = ['pressure', 'temperature', 'battery','reset', 'location', 'pressure-event', 'rssi'];
 
     if (!_.includes(validTypes, type)) {
         return;
@@ -109,13 +110,22 @@ client.on('message', function (topic, message) {
                 updateGeolocation(deviceId, decoded.latitude, decoded.longitude);
                 break;
             case 'pressure-event':
-                handlePressureEventData(amqp, deviceId, decoded);
+                handlePartData('p', amqp, deviceId, decoded);
+                break;
+            case 'hydrophone':
+                handlePartData('h', amqp, deviceId, decoded);
                 break;
         }
     });
 });
 
-function handlePressureEventData(amqp, deviceId, data){
+function handlePartData(type, amqp, deviceId, data) {
+    let validTypes = ['h', 'p'];
+
+    if (!validTypes.includes(type)) {
+        return;
+    }
+
     //console.log('Pressure event data: ' + JSON.stringify(data));
 
     let date = new Date(data.date);
@@ -123,18 +133,18 @@ function handlePressureEventData(amqp, deviceId, data){
 
     // Only one part, just process
     if (data.part[0] === 1 && data.part[1] === 1) {
-        if (key in pressureEventBuffer) {
-            delete pressureEventBuffer[key];
+        if (key in partBuffer[type]) {
+            delete partBuffer[type][key];
         }
 
-        pressureEventBuffer[key] = {
+        partBuffer[type][key] = {
             parts: data.part[1],
             date: data.date,
             deviceId: deviceId,
             values: data.value
         };
 
-        queuePressureEventData(amqp, deviceId, key);
+        queuePartData(type, amqp, deviceId, key);
 
         return;
     }
@@ -143,11 +153,11 @@ function handlePressureEventData(amqp, deviceId, data){
     if (data.part[0] === 1) {
         //console.log('First pressure event part received. Part ' + data.part[0] + ' with ' + data.value.length + ' values.');
         //console.log('KEY: ' + key);
-        if (key in pressureEventBuffer) {
-            delete pressureEventBuffer[key];
+        if (key in partBuffer[type]) {
+            delete partBuffer[type][key];
         }
 
-        pressureEventBuffer[key] = {
+        partBuffer[type][key] = {
             parts: data.part[1],
             date: data.date,
             deviceId: deviceId,
@@ -160,24 +170,24 @@ function handlePressureEventData(amqp, deviceId, data){
     }
 
     // If this is the last part, append and pub values
-    if (data.part[0] === pressureEventBuffer[key].parts) {
+    if (data.part[0] === partBuffer[type][key].parts) {
         //console.log('Last part received. Part ' + data.part[0] + ' with ' + data.value.length + ' values.');
         //console.log('KEY: ' + key);
 
-        pressureEventBuffer[key].values = pressureEventBuffer[key].values.concat(data.value);
+        partBuffer[type][key].values = partBuffer[type][key].values.concat(data.value);
 
         //console.log('Updated number of values: ' + pressureEventBuffer[key].values.length);
 
-        queuePressureEventData(amqp, deviceId, key);
+        queuePartData(type, amqp, deviceId, key);
 
         return;
     }
 
     // If this is a middle part, just append
-    if (data.part[0] < pressureEventBuffer[key].parts) {
+    if (data.part[0] < partBuffer[type][key].parts) {
         //console.log('Received part ' + data.part[0] + ' of ' + data.part[1] + ' parts with ' + data.value.length + ' values.');
         //console.log('KEY: ' + key);
-        pressureEventBuffer[key].values = pressureEventBuffer[key].values.concat(data.value);
+        partBuffer[type][key].values = partBuffer[type][key].values.concat(data.value);
 
         //console.log('Updated number of values: ' + pressureEventBuffer[key].values.length);
 
@@ -185,9 +195,9 @@ function handlePressureEventData(amqp, deviceId, data){
     }
 }
 
-function queuePressureEventData(amqp, deviceId, key) {
+function queuePartData(type, amqp, deviceId, key) {
     // No key, do nothing
-    if (!(key in pressureEventBuffer)) {
+    if (!(key in partBuffer[type])) {
         return;
     }
 
@@ -208,7 +218,7 @@ function queuePressureEventData(amqp, deviceId, key) {
                 let assetPromise = Asset.findById(device.asset).populate('location').exec();
 
                 assetPromise.then(function (asset) {
-                    let docPromise = buildPressureEventDocs(asset, device, key);
+                    let docPromise = buildPartDocs(type, asset, device, key);
 
                     docPromise.then(function (documents) {
                         //console.log('Sending data to queue...');
@@ -222,8 +232,8 @@ function queuePressureEventData(amqp, deviceId, key) {
                             });
 
                             // Done processing, delete the key
-                            if (key in pressureEventBuffer) {
-                                delete pressureEventBuffer[key];
+                            if (key in partBuffer[type]) {
+                                delete partBuffer[type][key];
                             }
 
                             return ch.close();
@@ -234,22 +244,26 @@ function queuePressureEventData(amqp, deviceId, key) {
             }).catch(console.warn);
 
         });
-
 }
 
-function buildPressureEventDocs(asset, device, key) {
+function buildPartDocs(type, asset, device, key) {
 
-    let timestampms = Date.parse(pressureEventBuffer[key].date);
+    let timestamps = Date.parse(partBuffer[type][key].date);
 
     let sampleRate;
 
-    if (isNaN(pressureEventBuffer[key].rate)) {
-        sampleRate = 10;
-    } else {
-        sampleRate = pressureEventBuffer[key].rate;
+    let sensorType = 1;
+    if (type === 'h') {
+        sensorType = 11;
     }
 
-    let promise = Sensor.findOne({ type: 1 }).exec();
+    if (isNaN(partBuffer[type][key].rate)) {
+        sampleRate = 10;
+    } else {
+        sampleRate = partBuffer[type][key].rate;
+    }
+
+    let promise = Sensor.findOne({ type: sensorType }).exec();
     return promise.then(function (sensor) {
 
         let documents = [];
@@ -259,8 +273,8 @@ function buildPressureEventDocs(asset, device, key) {
         //console.log('Building documents for buffer key ' + key);
         //console.log('Number of documents to process: ' + pressureEventBuffer[key].values.length);
 
-        for (let i=0; i < pressureEventBuffer[key].values.length; i++) {
-            timestamp = new Date(timestampms);
+        for (let i=0; i < partBuffer[type][key].values.length; i++) {
+            timestamp = new Date(timestamps);
 
             document = {
                 timestamp: timestamp.toISOString(),
@@ -299,20 +313,19 @@ function buildPressureEventDocs(asset, device, key) {
                     _id: sensor._id,
                     unit: sensor.unit,
                     values: {
-                        point: pressureEventBuffer[key].values[i],
-                        current: pressureEventBuffer[key].values[i]
+                        point: partBuffer[type][key].values[i],
+                        current: partBuffer[type][key].values[i]
                     }
                 }
             };
 
             documents.push(document);
 
-            timestampms += sampleRate;
+            timestamps += sampleRate;
         }
 
         return documents;
     });
-
 }
 
 function handleData(amqp, data, deviceId) {
@@ -472,7 +485,7 @@ function handleAppExit (options, err) {
     }
 
     if (options.cleanup) {
-        // Cleamup
+        // Cleanup
     }
 
     if (options.exit) {
