@@ -26,8 +26,7 @@ mongoose.connect(config.db, config.dbOptions, function(err) {
 let client  = mqtt.connect(config.mqtt, config.mqttoptions);
 let amqp = require('amqplib').connect(config.amqp);
 
-let pressureEventBuffer = [];
-let partBuffer = [];
+let partBuffer = {'h': [], 'p': []};
 
 console.log('Started on IP ' + config.ip + '. NODE_ENV=' + process.env.NODE_ENV);
 
