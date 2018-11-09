@@ -480,7 +480,7 @@ function deviceResetLog(deviceId, data) {
 
 function handleAppExit (options, err) {
     if (err) {
-        console.log(err.stack);
+        console.log('App Exit Error: ' + err.stack);
     }
 
     if (options.cleanup) {
