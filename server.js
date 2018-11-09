@@ -137,7 +137,7 @@ function handlePartData(type, amqp, deviceId, data) {
         return;
     }
 
-    console.log('Part data of type ' + type + ' received. Part ' + data.part[0] + ' of ' + data.part[1];
+    console.log('Part data of type ' + type + ' received. Part ' + data.part[0] + ' of ' + data.part[1]);
 
     let date = new Date(data.date);
     let key = date.getTime() + deviceId;
