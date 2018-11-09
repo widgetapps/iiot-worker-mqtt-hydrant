@@ -41,6 +41,18 @@ client.on('connect', function () {
     client.subscribe(['+/v1/pressure', '+/v1/temperature', '+/v1/battery', '+/v1/reset', '+/v1/location', '+/v1/pressure-event', '+/v1/rssi', '+/v1/hydrophone']);
 });
 
+client.on('reconnect', function () {
+   console.log('Reconnecting to MQTT server...');
+});
+
+client.on('close', function () {
+    console.log('MQTT connection closed.');
+});
+
+client.on('offline', function () {
+    console.log('MQTT client went offline.');
+});
+
 client.on('message', function (topic, message) {
     let [deviceId, version, type] = topic.split('/');
 
