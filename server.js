@@ -150,7 +150,7 @@ function handlePartData(type, amqp, deviceId, data) {
 
     // If this is the first part, create the array element
     if (data.part[0] === 1) {
-        //console.log('First pressure event part received. Part ' + data.part[0] + ' with ' + data.value.length + ' values.');
+        console.log('First pressure event part received. Part ' + data.part[0] + ' with ' + data.value.length + ' values.');
         //console.log('KEY: ' + key);
         if (key in partBuffer[type]) {
             delete partBuffer[type][key];
@@ -170,7 +170,7 @@ function handlePartData(type, amqp, deviceId, data) {
 
     // If this is the last part, append and pub values
     if (data.part[0] === partBuffer[type][key].parts) {
-        //console.log('Last part received. Part ' + data.part[0] + ' with ' + data.value.length + ' values.');
+        console.log('Last part received. Part ' + data.part[0] + ' with ' + data.value.length + ' values.');
         //console.log('KEY: ' + key);
 
         partBuffer[type][key].values = partBuffer[type][key].values.concat(data.value);
@@ -226,7 +226,7 @@ function queuePartData(type, amqp, deviceId, key) {
                         return ok.then(function() {
 
                             documents.forEach(function (document) {
-                                ch.sendToQueue(q, new Buffer(JSON.stringify(document)), {persistent: true});
+                                ch.sendToQueue(q, Buffer.from(JSON.stringify(document)), {persistent: true});
                                 //console.log(JSON.stringify(document));
                             });
 
@@ -269,8 +269,8 @@ function buildPartDocs(type, asset, device, key) {
         let document;
         let timestamp;
 
-        //console.log('Building documents for buffer key ' + key);
-        //console.log('Number of documents to process: ' + pressureEventBuffer[key].values.length);
+        console.log('Building documents for buffer key ' + key);
+        console.log('Number of documents to process: ' + partBuffer[type][key].values.length);
 
         for (let i=0; i < partBuffer[type][key].values.length; i++) {
             timestamp = new Date(timestamps);
