@@ -81,6 +81,8 @@ client.on('message', function (topic, message) {
 
         if (decoded['sample-rate']) {
             console.log('SAMPLE-RATE: ' + decoded['sample-rate']);
+            decoded['sample-rate'] = decoded['sample-rate'].split(',');
+            console.log('SAMPLE-RATE: ' + decoded['sample-rate']);
         }
 
         let data = {
