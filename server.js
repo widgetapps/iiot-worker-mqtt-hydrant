@@ -358,7 +358,7 @@ function buildPartDocs(type, asset, device, key, eventId) {
 
             documents.push(document);
 
-            timestamp += sampleRate;
+            //timestamp += sampleRate;
         }
 
         return {documents: documents, sensor: sensor};
