@@ -72,6 +72,8 @@ client.on('message', function (topic, message) {
             return;
         }
 
+        console.log('DATE: ' + decoded.date);
+
         let data = {
             timestamp: microdate.parseISOString(decoded.date)
         };
