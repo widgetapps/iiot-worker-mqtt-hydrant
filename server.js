@@ -134,7 +134,7 @@ function handlePartData(type, amqp, deviceId, data) {
         return;
     }
 
-    // console.log('Part data of type ' + type + ' received. Part ' + data.part[0] + ' of ' + data.part[1]);
+    console.log('Part data of type ' + type + ' received. Part ' + data.part[0] + ' of ' + data.part[1]);
 
     // Convert date back to milliseconds to create new date
     let date = new Date(data.timestamp / 1000);
@@ -381,7 +381,7 @@ function handleData(amqp, data, deviceId) {
 
 
 function queueDatabase(amqp, device, data) {
-    //console.log('Queueing data: ' + JSON.stringify(data));
+    console.log('Queueing data: ' + JSON.stringify(data));
     amqp.then (function(conn) {
         //console.log('AMQP connection established');
         return conn.createChannel();
