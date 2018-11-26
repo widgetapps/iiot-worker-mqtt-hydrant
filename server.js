@@ -73,6 +73,7 @@ client.on('message', function (topic, message) {
         }
 
         console.log('GOT DATE: ' + decoded.date.toISOString());
+        console.log('MICRODATE:' + microdate.parseISOString(decoded.date.toISOString()));
 
         let data = {
             timestamp: microdate.parseISOString(decoded.date.toISOString())
