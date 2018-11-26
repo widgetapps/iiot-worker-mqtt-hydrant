@@ -314,6 +314,7 @@ function buildPartDocs(type, asset, device, key, eventId) {
         // console.log('Number of documents to process: ' + partBuffer[type][key].values.length);
 
         for (let i=0; i < partBuffer[type][key].values.length; i++) {
+            console.log('TIMESTAMP: ' + timestamp);
 
             document = {
                 timestamp: timestamp,
