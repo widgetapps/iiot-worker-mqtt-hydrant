@@ -67,7 +67,7 @@ client.on('message', function (topic, message) {
 
     let cborOptions ={
         tags: { 30: (val) => {
-                return val;
+                return val.split(',');
             }
         }
     };
