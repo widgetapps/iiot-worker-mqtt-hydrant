@@ -67,7 +67,7 @@ client.on('message', function (topic, message) {
 
     cbor.decodeFirst(message, function(err, decoded) {
 
-        console.log('DATE: ' + decoded.date);
+        console.log('DATE: ' + decoded.date.toISOString());
         return;
 
         if (err !== null) {
