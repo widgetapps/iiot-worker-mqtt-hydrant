@@ -65,7 +65,7 @@ client.on('message', function (topic, message) {
         return;
     }
 
-    let decoder = cbor.Decoder({
+    let decoder = new cbor.Decoder({
         tags: { 30: (val) => {
                 return [val[0], val[1]];
             }
