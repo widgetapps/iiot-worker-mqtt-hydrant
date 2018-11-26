@@ -57,7 +57,7 @@ client.on('offline', function () {
 client.on('message', function (topic, message) {
     let [deviceId, version, type] = topic.split('/');
 
-    console.log('Message from device ' + deviceId + ' if type ' + type);
+    console.log('Message from device ' + deviceId + ' of type ' + type);
 
     let validTypes = ['pressure', 'temperature', 'battery','reset', 'location', 'pressure-event', 'rssi', 'hydrophone'];
 
@@ -67,12 +67,12 @@ client.on('message', function (topic, message) {
 
     cbor.decodeFirst(message, function(err, decoded) {
 
+        console.log('DATE: ' + decoded.date);
+
         if (err !== null) {
             console.log('Error decoding CBOR: ' + err);
             return;
         }
-
-        console.log('DATE: ' + decoded.date);
 
         let data = {
             timestamp: microdate.parseISOString(decoded.date)
