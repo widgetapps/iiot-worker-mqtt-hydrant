@@ -9,6 +9,7 @@ let config = require('./config'),
     _ = require('lodash'),
     mqtt = require('mqtt'),
     cbor = require('cbor'),
+    microdate = require('lib/microdate'),
     Device   = require('@terepac/terepac-models').Device,
     Asset    = require('@terepac/terepac-models').Asset,
     Sensor   = require('@terepac/terepac-models').Sensor,
@@ -70,7 +71,7 @@ client.on('message', function (topic, message) {
         }
 
         let data = {
-            timestamp: new Date(decoded.date)
+            timestamp: microdate.parseISOString(decoded.date)
         };
 
         switch (type) {
@@ -80,7 +81,6 @@ client.on('message', function (topic, message) {
                 data.max     = decoded.max;
                 data.avg     = decoded.avg;
                 data.point   = decoded.value;
-                data.current = decoded.value;
                 data.samples = decoded.n;
                 handleData(amqp, data, deviceId);
                 break;
@@ -90,7 +90,6 @@ client.on('message', function (topic, message) {
                 data.max     = null;
                 data.avg     = null;
                 data.point   = decoded.value;
-                data.current = decoded.value;
                 data.samples = null;
                 handleData(amqp, data, deviceId);
                 break;
@@ -100,7 +99,6 @@ client.on('message', function (topic, message) {
                 data.max     = null;
                 data.avg     = null;
                 data.point   = decoded.value;
-                data.current = decoded.value;
                 data.samples = null;
                 handleData(amqp, data, deviceId);
                 break;
@@ -110,7 +108,6 @@ client.on('message', function (topic, message) {
                 data.max     = decoded.max;
                 data.avg     = decoded.avg;
                 data.point   = decoded.value;
-                data.current = decoded.value;
                 data.samples = decoded.n;
                 handleData(amqp, data, deviceId);
                 break;
@@ -139,7 +136,8 @@ function handlePartData(type, amqp, deviceId, data) {
 
     // console.log('Part data of type ' + type + ' received. Part ' + data.part[0] + ' of ' + data.part[1]);
 
-    let date = new Date(data.date);
+    // Convert date back to milliseconds to create new date
+    let date = new Date(data.timestamp / 1000);
     let key = date.getTime() + deviceId;
 
     // Only one part, just process
@@ -150,7 +148,7 @@ function handlePartData(type, amqp, deviceId, data) {
 
         partBuffer[type][key] = {
             parts: data.part[1],
-            date: data.date,
+            date: data.timestamp,
             deviceId: deviceId,
             values: data.value
         };
@@ -170,7 +168,7 @@ function handlePartData(type, amqp, deviceId, data) {
 
         partBuffer[type][key] = {
             parts: data.part[1],
-            date: data.date,
+            date: data.timestamp,
             deviceId: deviceId,
             values: data.value
         };
@@ -229,18 +227,43 @@ function queuePartData(type, amqp, deviceId, key) {
                 let assetPromise = Asset.findById(device.asset).populate('location').exec();
 
                 assetPromise.then(function (asset) {
-                    let docPromise = buildPartDocs(type, asset, device, key);
+                    let eventId = mongoose.Types.ObjectId();
+                    let docPromise = buildPartDocs(type, asset, device, key, eventId);
 
-                    docPromise.then(function (documents) {
+                    docPromise.then(function (result) {
                         //console.log('Sending data to queue...');
-                        let q = 'telemetry';
-                        let ok = ch.assertQueue(q, {durable: true});
+
+                        let documents = result.documents;
+                        let sensor = result.sensor;
+                        let ex = 'telemetry';
+                        let ok = ch.assertExchange(ex, 'direct', {durable: true});
                         return ok.then(function() {
 
                             documents.forEach(function (document) {
-                                ch.sendToQueue(q, Buffer.from(JSON.stringify(document)), {persistent: true});
-                                //console.log(JSON.stringify(document));
+                                ch.publish(ex, 'event_telemetry', Buffer.from(JSON.stringify(document)), {persistent: true});
+                                // console.log(JSON.stringify(document));
                             });
+
+                            let eventdoc = {
+                                _id: eventId,
+                                start: new Date(documents[0].timestamp / 1000),
+                                end: new Date(documents[documents.length - 1].timestamp / 1000),
+                                count: documents.length,
+                                description: sensor.typeString + ' event',
+                                tag: {
+                                    full: asset.location.tagCode + '_' + asset.tagCode + '_' + sensor.tagCode,
+                                    clientTagCode: device.client.tagCode,
+                                    locationTagCode: asset.location.tagCode,
+                                    assetTagCode: asset.tagCode,
+                                    sensorTagCode: sensor.tagCode
+                                },
+                                asset: asset._id,
+                                device: device._id,
+                                sensor: sensor._id,
+                                client: device.client._id
+                            };
+                            ch.publish(ex, 'event', Buffer.from(JSON.stringify(eventdoc)), {persistent: true});
+                            // console.log(eventdoc);
 
                             // Done processing, delete the key
                             if (key in partBuffer[type]) {
@@ -257,21 +280,26 @@ function queuePartData(type, amqp, deviceId, key) {
         });
 }
 
-function buildPartDocs(type, asset, device, key) {
+function buildPartDocs(type, asset, device, key, eventId) {
 
-    let timestamps = Date.parse(partBuffer[type][key].date);
+    // partBuffer[type][key].date is in microseconds
+    let timestamp = partBuffer[type][key].date;
 
     let sampleRate;
 
+    // Default sensor type to pressure (1)
     let sensorType = 1;
     if (type === 'h') {
         sensorType = 11;
     }
 
-    if (isNaN(partBuffer[type][key].rate)) {
-        sampleRate = 10;
+    // TODO: Gotta fix this sample rate
+    // Convert partBuffer[type][key]['sample-rate'] to microseconds
+    if (isNaN(partBuffer[type][key]['sample-rate'])) {
+        // Default to 100 milliseconds, sampleRate is in microseconds
+        sampleRate = 100000;
     } else {
-        sampleRate = partBuffer[type][key].rate;
+        sampleRate = partBuffer[type][key]['sample-rate'];
     }
 
     let promise = Sensor.findOne({ type: sensorType }).exec();
@@ -279,16 +307,14 @@ function buildPartDocs(type, asset, device, key) {
 
         let documents = [];
         let document;
-        let timestamp;
 
         // console.log('Building documents for buffer key ' + key);
         // console.log('Number of documents to process: ' + partBuffer[type][key].values.length);
 
         for (let i=0; i < partBuffer[type][key].values.length; i++) {
-            timestamp = new Date(timestamps);
 
             document = {
-                timestamp: timestamp.toISOString(),
+                timestamp: timestamp,
                 tag: {
                     full: asset.location.tagCode + '_' + asset.tagCode + '_' + sensor.tagCode,
                     clientTagCode: device.client.tagCode,
@@ -314,28 +340,26 @@ function buildPartDocs(type, asset, device, key) {
                     description: device.description
                 },
                 sensor: {
+                    _id: sensor._id,
                     type: sensor.type,
                     typeString: sensor.typeString,
                     description: sensor.description,
                     unit: sensor.unit
                 },
                 client: device.client._id,
+                event: eventId,
                 data: {
-                    _id: sensor._id,
                     unit: sensor.unit,
-                    values: {
-                        point: partBuffer[type][key].values[i],
-                        current: partBuffer[type][key].values[i]
-                    }
+                    value: partBuffer[type][key].values[i]
                 }
             };
 
             documents.push(document);
 
-            timestamps += sampleRate;
+            timestamp += sampleRate;
         }
 
-        return documents;
+        return {documents: documents, sensor: sensor};
     });
 }
 
@@ -367,13 +391,14 @@ function queueDatabase(amqp, device, data) {
 
         assetPromise.then(function (asset) {
             //console.log('Sending data to queue...');
-            let q = 'telemetry';
-            let ok = ch.assertQueue(q, {durable: true});
+
+            let ex = 'telemetry';
+            let ok = ch.assertExchange(ex, 'direct', {durable: true});
             return ok.then(function() {
                 buildMessage(asset, device, data, function(document){
 
-                    ch.sendToQueue(q, Buffer.from(JSON.stringify(document)), {persistent: true});
-                    //console.log(JSON.stringify(document));
+                    ch.publish(ex, 'telemetry', Buffer.from(JSON.stringify(document)), {persistent: true});
+                    // console.log(JSON.stringify(document));
 
                     return ch.close();
                 });
@@ -389,7 +414,7 @@ function buildMessage(asset, device, data, callback) {
     promise.then(function (sensor) {
 
         let document = {
-            timestamp: data.timestamp,
+            timestamp: new Date(data.timestamp / 1000),
             tag: {
                 full: asset.location.tagCode + '_' + asset.tagCode + '_' + sensor.tagCode,
                 clientTagCode: device.client.tagCode,
@@ -415,6 +440,7 @@ function buildMessage(asset, device, data, callback) {
                 description: device.description
             },
             sensor: {
+                _id: sensor._id,
                 type: sensor.type,
                 typeString: sensor.typeString,
                 description: sensor.description,
@@ -422,14 +448,12 @@ function buildMessage(asset, device, data, callback) {
             },
             client: device.client._id,
             data: {
-                _id: sensor._id,
                 unit: sensor.unit,
                 values: {
                     min: data.min,
                     max: data.max,
                     average: data.avg,
                     point: data.point,
-                    current: data.point,
                     samples: data.samples
                 }
             }
