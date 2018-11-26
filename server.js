@@ -142,7 +142,8 @@ function handlePartData(type, amqp, deviceId, data) {
     // console.log('Part data of type ' + type + ' received. Part ' + data.part[0] + ' of ' + data.part[1]);
 
     // Convert date back to milliseconds to create new date, just for creating the part key
-    let key = (data.timestamp / 1000) + deviceId;
+    let date = new Date(data.timestamp / 1000);
+    let key = (date.getTime()) + deviceId;
 
     console.log('TIMESTAMP: ' + data.timestamp);
 
