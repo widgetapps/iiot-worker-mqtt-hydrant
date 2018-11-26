@@ -57,7 +57,7 @@ client.on('offline', function () {
 client.on('message', function (topic, message) {
     let [deviceId, version, type] = topic.split('/');
 
-    console.log('Message from device ' + deviceId + ' of type ' + type);
+    // console.log('Message from device ' + deviceId + ' of type ' + type);
 
     let validTypes = ['pressure', 'temperature', 'battery','reset', 'location', 'pressure-event', 'rssi', 'hydrophone'];
 
@@ -138,7 +138,7 @@ function handlePartData(type, amqp, deviceId, data) {
 
     console.log('Part data of type ' + type + ' received. Part ' + data.part[0] + ' of ' + data.part[1]);
 
-    // Convert date back to milliseconds to create new date
+    // Convert date back to milliseconds to create new date, just for creating the part key
     let date = new Date(data.timestamp / 1000);
     let key = date.getTime() + deviceId;
 
@@ -150,7 +150,7 @@ function handlePartData(type, amqp, deviceId, data) {
 
         partBuffer[type][key] = {
             parts: data.part[1],
-            date: data.timestamp,
+            timestamp: data.timestamp,
             deviceId: deviceId,
             values: data.value
         };
@@ -170,7 +170,7 @@ function handlePartData(type, amqp, deviceId, data) {
 
         partBuffer[type][key] = {
             parts: data.part[1],
-            date: data.timestamp,
+            timestamp: data.timestamp,
             deviceId: deviceId,
             values: data.value
         };
@@ -284,8 +284,8 @@ function queuePartData(type, amqp, deviceId, key) {
 
 function buildPartDocs(type, asset, device, key, eventId) {
 
-    // partBuffer[type][key].date is in microseconds
-    let timestamp = partBuffer[type][key].date;
+    // partBuffer[type][key].timestamp is in microseconds
+    let timestamp = partBuffer[type][key].timestamp;
 
     let sampleRate;
 
@@ -383,7 +383,9 @@ function handleData(amqp, data, deviceId) {
 
 
 function queueDatabase(amqp, device, data) {
-    console.log('Queueing data: ' + JSON.stringify(data));
+
+    // console.log('Queueing data: ' + JSON.stringify(data));
+
     amqp.then (function(conn) {
         //console.log('AMQP connection established');
         return conn.createChannel();
