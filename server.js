@@ -139,13 +139,15 @@ function handlePartData(type, amqp, deviceId, data) {
         return;
     }
 
+    let timestamp = microdate.parseISOString(decoded.date.toISOString());
+
     // console.log('Part data of type ' + type + ' received. Part ' + data.part[0] + ' of ' + data.part[1]);
 
     // Convert date back to milliseconds to create new date, just for creating the part key
-    let date = new Date(data.timestamp / 1000);
+    let date = new Date(timestamp / 1000);
     let key = (date.getTime()) + deviceId;
 
-    console.log('TIMESTAMP: ' + data.timestamp);
+    console.log('TIMESTAMP: ' + timestamp);
 
     // Only one part, just process
     if (data.part[0] === 1 && data.part[1] === 1) {
@@ -155,7 +157,7 @@ function handlePartData(type, amqp, deviceId, data) {
 
         partBuffer[type][key] = {
             parts: data.part[1],
-            timestamp: data.timestamp,
+            timestamp: timestamp,
             deviceId: deviceId,
             values: data.value
         };
@@ -175,7 +177,7 @@ function handlePartData(type, amqp, deviceId, data) {
 
         partBuffer[type][key] = {
             parts: data.part[1],
-            timestamp: data.timestamp,
+            timestamp: timestamp,
             deviceId: deviceId,
             values: data.value
         };
