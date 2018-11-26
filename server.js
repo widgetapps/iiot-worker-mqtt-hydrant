@@ -72,7 +72,14 @@ client.on('message', function (topic, message) {
         }
     });
 
-    cbor.decodeFirst(message, function(err, decoded) {
+    let cborOptiopns ={
+        tags: { 30: (val) => {
+                return [val[0], val[1]];
+            }
+        }
+    };
+
+    cbor.decodeFirst(message, cborOptiopns, function(err, decoded) {
 
         if (err !== null) {
             console.log('Error decoding CBOR: ' + err);
