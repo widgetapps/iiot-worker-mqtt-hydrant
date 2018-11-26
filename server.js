@@ -65,15 +65,19 @@ client.on('message', function (topic, message) {
         return;
     }
 
-    cbor.decodeFirst(message, function(err, decoded) {
+    const cborOptions = {
+        tags: { 30: (val) => {
+                return [val[0], val[1]];
+            }
+        }
+    };
+
+    cbor.decodeFirst(message, cborOptions, function(err, decoded) {
 
         if (err !== null) {
             console.log('Error decoding CBOR: ' + err);
             return;
         }
-
-        console.log('GOT DATE: ' + decoded.date.toISOString());
-        console.log('MICRODATE:' + microdate.parseISOString(decoded.date.toISOString()));
 
         let data = {
             timestamp: microdate.parseISOString(decoded.date.toISOString())
@@ -146,8 +150,6 @@ function handlePartData(type, amqp, deviceId, data) {
     // Convert date back to milliseconds to create new date, just for creating the part key
     let date = new Date(timestamp / 1000);
     let key = (date.getTime()) + deviceId;
-
-    console.log('TIMESTAMP: ' + timestamp);
 
     // Only one part, just process
     if (data.part[0] === 1 && data.part[1] === 1) {
@@ -304,11 +306,11 @@ function buildPartDocs(type, asset, device, key, eventId) {
 
     // TODO: Gotta fix this sample rate
     // Convert partBuffer[type][key]['sample-rate'] to microseconds
-    if (isNaN(partBuffer[type][key]['sample-rate'])) {
+    if (partBuffer[type][key]['sample-rate'] && isNaN(partBuffer[type][key]['sample-rate'][0]) && isNaN(partBuffer[type][key]['sample-rate'][1])) {
         // Default to 100 milliseconds, sampleRate is in microseconds
         sampleRate = 100000;
     } else {
-        sampleRate = partBuffer[type][key]['sample-rate'];
+        sampleRate = (1000 / (partBuffer[type][key]['sample-rate'][0] / partBuffer[type][key]['sample-rate'][1])) * 1000;
     }
 
     let promise = Sensor.findOne({ type: sensorType }).exec();
@@ -365,7 +367,7 @@ function buildPartDocs(type, asset, device, key, eventId) {
 
             documents.push(document);
 
-            //timestamp += sampleRate;
+            timestamp += sampleRate;
         }
 
         return {documents: documents, sensor: sensor};
