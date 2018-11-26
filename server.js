@@ -67,16 +67,13 @@ client.on('message', function (topic, message) {
 
     cbor.decodeFirst(message, function(err, decoded) {
 
-        console.log('DATE: ' + decoded.date.toISOString());
-        return;
-
         if (err !== null) {
             console.log('Error decoding CBOR: ' + err);
             return;
         }
 
         let data = {
-            timestamp: microdate.parseISOString(decoded.date)
+            timestamp: microdate.parseISOString(decoded.date.toISOString())
         };
 
         switch (type) {
