@@ -72,7 +72,7 @@ client.on('message', function (topic, message) {
         }
     });
 
-    decoder.decodeFirst(message, function(err, decoded) {
+    cbor.decodeFirst(message, function(err, decoded) {
 
         if (err !== null) {
             console.log('Error decoding CBOR: ' + err);
