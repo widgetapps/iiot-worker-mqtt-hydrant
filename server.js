@@ -79,6 +79,9 @@ client.on('message', function (topic, message) {
             return;
         }
 
+        console.log('DATE ' + decoded['date']);
+        console.log('SAMPLE-RATE: ' + decoded['sample-rate']);
+
         let data = {
             timestamp: microdate.parseISOString(decoded.date.toISOString())
         };
@@ -303,8 +306,6 @@ function buildPartDocs(type, asset, device, key, eventId) {
     if (type === 'h') {
         sensorType = 11;
     }
-
-    console.log(JSON.stringify(partBuffer[type][key]['sample-rate']));
 
     // TODO: Gotta fix this sample rate
     // Convert partBuffer[type][key]['sample-rate'] to microseconds
