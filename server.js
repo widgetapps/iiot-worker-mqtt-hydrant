@@ -79,6 +79,10 @@ client.on('message', function (topic, message) {
             return;
         }
 
+        if (decoded['sample-rate']) {
+            console.log('SAMPLE-RATE: ' + decoded['sample-rate']);
+        }
+
         let data = {
             timestamp: microdate.parseISOString(decoded.date.toISOString())
         };
