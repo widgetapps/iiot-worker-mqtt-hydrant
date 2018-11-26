@@ -79,10 +79,6 @@ client.on('message', function (topic, message) {
             return;
         }
 
-        if (decoded['sample-rate']) {
-            console.log('SAMPLE-RATE: ' + decoded['sample-rate'][0] + ' over ' + decoded['sample-rate'][1]);
-        }
-
         let data = {
             timestamp: microdate.parseISOString(decoded.date.toISOString())
         };
@@ -162,6 +158,7 @@ function handlePartData(type, amqp, deviceId, data) {
         }
 
         partBuffer[type][key] = {
+            'sample-rate': data['sample-rate'],
             parts: data.part[1],
             timestamp: timestamp,
             deviceId: deviceId,
@@ -182,6 +179,7 @@ function handlePartData(type, amqp, deviceId, data) {
         }
 
         partBuffer[type][key] = {
+            'sample-rate': data['sample-rate'],
             parts: data.part[1],
             timestamp: timestamp,
             deviceId: deviceId,
