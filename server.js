@@ -68,6 +68,7 @@ client.on('message', function (topic, message) {
     cbor.decodeFirst(message, function(err, decoded) {
 
         console.log('DATE: ' + decoded.date);
+        return;
 
         if (err !== null) {
             console.log('Error decoding CBOR: ' + err);
