@@ -65,13 +65,6 @@ client.on('message', function (topic, message) {
         return;
     }
 
-    let decoder = new cbor.Decoder({
-        tags: { 30: (val) => {
-                return [val[0], val[1]];
-            }
-        }
-    });
-
     let cborOptions ={
         tags: { 30: (val) => {
                 return val;
@@ -85,8 +78,6 @@ client.on('message', function (topic, message) {
             console.log('Error decoding CBOR: ' + err);
             return;
         }
-
-        console.log('SAMPLE-RATE: ' + decoded['sample-rate']);
 
         let data = {
             timestamp: microdate.parseISOString(decoded.date.toISOString())
