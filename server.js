@@ -304,7 +304,7 @@ function buildPartDocs(type, asset, device, key, eventId) {
         sensorType = 11;
     }
 
-    console.log(JSON.stringify(partBuffer[ype][key]['sample-rate']));
+    console.log(JSON.stringify(partBuffer[type][key]['sample-rate']));
 
     // TODO: Gotta fix this sample rate
     // Convert partBuffer[type][key]['sample-rate'] to microseconds
