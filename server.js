@@ -142,8 +142,9 @@ function handlePartData(type, amqp, deviceId, data) {
     // console.log('Part data of type ' + type + ' received. Part ' + data.part[0] + ' of ' + data.part[1]);
 
     // Convert date back to milliseconds to create new date, just for creating the part key
-    let date = new Date(data.timestamp / 1000);
-    let key = date.getTime() + deviceId;
+    let key = (data.timestamp / 1000) + deviceId;
+
+    console.log('TIMESTAMP: ' + data.timestamp);
 
     // Only one part, just process
     if (data.part[0] === 1 && data.part[1] === 1) {
@@ -317,7 +318,6 @@ function buildPartDocs(type, asset, device, key, eventId) {
         // console.log('Number of documents to process: ' + partBuffer[type][key].values.length);
 
         for (let i=0; i < partBuffer[type][key].values.length; i++) {
-            console.log('TIMESTAMP: ' + partBuffer[type][key].timestamp);
 
             document = {
                 timestamp: timestamp,
