@@ -139,7 +139,7 @@ function handlePartData(type, amqp, deviceId, data) {
         return;
     }
 
-    let timestamp = microdate.parseISOString(decoded.date.toISOString());
+    let timestamp = microdate.parseISOString(data.date.toISOString());
 
     // console.log('Part data of type ' + type + ' received. Part ' + data.part[0] + ' of ' + data.part[1]);
 
