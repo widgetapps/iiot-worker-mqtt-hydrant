@@ -65,21 +65,20 @@ client.on('message', function (topic, message) {
         return;
     }
 
-    const cborOptions = {
+    let decoder = cbor.Decoder({
         tags: { 30: (val) => {
                 return [val[0], val[1]];
             }
         }
-    };
+    });
 
-    cbor.decodeFirst(message, cborOptions, function(err, decoded) {
+    decoder.decodeFirst(message, function(err, decoded) {
 
         if (err !== null) {
             console.log('Error decoding CBOR: ' + err);
             return;
         }
 
-        console.log('DATE ' + decoded['date']);
         console.log('SAMPLE-RATE: ' + decoded['sample-rate']);
 
         let data = {
