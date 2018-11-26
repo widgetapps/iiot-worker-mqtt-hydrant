@@ -57,6 +57,8 @@ client.on('offline', function () {
 client.on('message', function (topic, message) {
     let [deviceId, version, type] = topic.split('/');
 
+    console.log('Message from device ' + deviceId + ' if type ' + type);
+
     let validTypes = ['pressure', 'temperature', 'battery','reset', 'location', 'pressure-event', 'rssi', 'hydrophone'];
 
     if (!_.includes(validTypes, type)) {
