@@ -304,6 +304,8 @@ function buildPartDocs(type, asset, device, key, eventId) {
         sensorType = 11;
     }
 
+    console.log(JSON.stringify(partBuffer[ype][key]['sample-rate']));
+
     // TODO: Gotta fix this sample rate
     // Convert partBuffer[type][key]['sample-rate'] to microseconds
     if (partBuffer[type][key]['sample-rate'] && isNaN(partBuffer[type][key]['sample-rate'][0]) && isNaN(partBuffer[type][key]['sample-rate'][1])) {
