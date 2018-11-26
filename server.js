@@ -80,7 +80,7 @@ client.on('message', function (topic, message) {
         }
 
         if (decoded['sample-rate']) {
-            console.log('SAMPLE-RATE: ' + typeof decoded['sample-rate']);
+            console.log('SAMPLE-RATE: ' + JSON.stringify(decoded['sample-rate']));
         }
 
         let data = {
