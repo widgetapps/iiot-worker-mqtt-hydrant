@@ -142,7 +142,7 @@ client.on('message', function (topic, message) {
 
 function handlePartData(type, amqp, deviceId, data) {
 
-    // console.log('Part data of type ' + type + ' received. Part ' + data.part[0] + ' of ' + data.part[1]);
+    console.log('Part data of type ' + type + ' received. Part ' + data.part[0] + ' of ' + data.part[1]);
 
     let validTypes = ['h', 'p'];
 
