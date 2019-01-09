@@ -175,7 +175,7 @@ function handlePartData(type, amqp, deviceId, data) {
     // If this is the first part, create the array element
     if (data.part[0] === 1) {
         console.log('First part received. Part ' + data.part[0] + ' with ' + data.value.length + ' values.');
-        console.log('KEY: ' + key);
+        console.log('KEY: ' + date.getTime().toString() + ' ' + deviceId + ' -- ' + key);
         if (key in partBuffer[type]) {
             delete partBuffer[type][key];
         }
