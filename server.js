@@ -216,7 +216,7 @@ function handlePartData(type, amqp, deviceId, data) {
 
     // If this is a middle part, just append
     if (data.part[0] < partBuffer[type][key].parts) {
-        // console.log('Received part ' + data.part[0] + ' of ' + data.part[1] + ' parts with ' + data.value.length + ' values.');
+        console.log('Received part ' + data.part[0] + ' of ' + data.part[1] + ' parts with ' + data.value.length + ' values.');
         // console.log('KEY: ' + key);
         partBuffer[type][key].values = partBuffer[type][key].values.concat(data.value);
 
