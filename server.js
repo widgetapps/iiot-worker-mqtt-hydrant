@@ -37,7 +37,7 @@ client.on('error', function (error) {
 });
 
 client.on('connect', function () {
-    //console.log('Connected to MQTT server: ' + config.mqtt);
+    console.log('Connected to MQTT server: ' + config.mqtt);
     // Subscribe to hydrant pubs
     client.subscribe(['+/v1/pressure', '+/v1/temperature', '+/v1/battery', '+/v1/reset', '+/v1/location', '+/v1/pressure-event', '+/v1/rssi', '+/v1/hydrophone'], {qos: 2});
 });
@@ -47,7 +47,7 @@ client.on('reconnect', function () {
 });
 
 client.on('close', function () {
-    //console.log('MQTT connection closed.');
+    console.log('MQTT connection closed.');
 });
 
 client.on('offline', function () {
@@ -190,8 +190,6 @@ function handlePartData(type, amqp, deviceId, data) {
             deviceId: deviceId,
             values: data.value
         };
-
-        //console.log('Updated number of values: ' + pressureEventBuffer[key].values.length);
 
         return;
     }
