@@ -194,7 +194,7 @@ function handlePartData(type, amqp, deviceId, data) {
     }
 
     if (typeof partBuffer[type][key] === 'undefined') {
-        //console.log('Parts array missing.');
+        console.log('Parts array missing.');
         //console.log('KEY: ', + key);
         //console.log('PARTS: ' + data.part[0] + ':' + data.part[1]);
         return;
