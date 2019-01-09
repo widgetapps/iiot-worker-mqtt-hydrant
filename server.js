@@ -137,6 +137,9 @@ client.on('message', function (topic, message) {
 });
 
 function handlePartData(type, amqp, deviceId, data) {
+
+    console.log('Part data of type ' + type + ' received. Part ' + data.part[0] + ' of ' + data.part[1]);
+
     let validTypes = ['h', 'p'];
 
     if (!validTypes.includes(type)) {
@@ -144,8 +147,6 @@ function handlePartData(type, amqp, deviceId, data) {
     }
 
     let timestamp = microdate.parseISOString(data.date.toISOString());
-
-    // console.log('Part data of type ' + type + ' received. Part ' + data.part[0] + ' of ' + data.part[1]);
 
     // Convert date back to milliseconds to create new date, just for creating the part key
     let date = new Date(timestamp / 1000);
