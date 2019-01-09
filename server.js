@@ -149,7 +149,8 @@ function handlePartData(type, amqp, deviceId, data) {
 
     // Convert date back to milliseconds to create new date, just for creating the part key
     let date = new Date(timestamp / 1000);
-    let key = (date.getTime()) + deviceId;
+    //let key = (date.getTime()) + deviceId;
+    let key = deviceId;
 
     // Only one part, just process
     if (data.part[0] === 1 && data.part[1] === 1) {
@@ -201,6 +202,10 @@ function handlePartData(type, amqp, deviceId, data) {
         //console.log('Updated number of values: ' + pressureEventBuffer[key].values.length);
 
         queuePartData(type, amqp, deviceId, key);
+
+        if (key in partBuffer[type]) {
+            delete partBuffer[type][key];
+        }
 
         return;
     }
