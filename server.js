@@ -24,6 +24,8 @@ mongoose.connect(config.db, config.dbOptions, function(err) {
     }
 });
 
+config.mqttoptions.clientId += Math.floor(Math.random() * 10000);
+
 let client  = mqtt.connect(config.mqtt, config.mqttoptions);
 let amqp = require('amqplib').connect(config.amqp);
 
