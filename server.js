@@ -223,6 +223,7 @@ function queuePartData(type, amqp, deviceId, key) {
         return;
     }
 
+    // TODO: Update this to use the deviceId field and nor serialNumber
     Device.findOne({ serialNumber: deviceId })
         .populate('client')
         .exec(function (err, device) {
@@ -500,6 +501,7 @@ function updateGeolocation(deviceId, latitude, longitude) {
             Location.findByIdAndUpdate(device.location,
                 {
                     $set: {
+                        updated: new Date(),
                         'geolocation.coordinates': [latitude, longitude]
                     }
                 }, function (err, location) {
@@ -513,9 +515,13 @@ function updateGeolocation(deviceId, latitude, longitude) {
 }
 
 function deviceResetLog(deviceId, data) {
+    // TODO: Need to decide what the max log entries will be. Maybe 10? Could be a setting.
     Device.findOneAndUpdate(
         { serialNumber: deviceId },
-        { $push: { resets: data  } },
+        {
+            updated: new Date(),
+            $push: { resets: data  }
+            },
         function (error, success) {
             if (error) {
                 //console.log(error);
