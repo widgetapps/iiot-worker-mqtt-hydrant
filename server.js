@@ -59,7 +59,7 @@ client.on('offline', function () {
 client.on('message', function (topic, message) {
     let [deviceId, version, type] = topic.split('/');
 
-    // console.log('Message received, topic is: ' + topic);
+    console.log('Message received, topic is: ' + topic);
 
     //console.log('Message from device ' + deviceId + ' of type ' + type);
 
