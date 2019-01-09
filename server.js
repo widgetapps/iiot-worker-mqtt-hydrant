@@ -211,10 +211,6 @@ function handlePartData(type, amqp, deviceId, data) {
 
         queuePartData(type, amqp, deviceId, key);
 
-        if (key in partBuffer[type]) {
-            delete partBuffer[type][key];
-        }
-
         return;
     }
 
