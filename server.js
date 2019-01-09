@@ -149,7 +149,7 @@ function handlePartData(type, amqp, deviceId, data) {
 
     // Convert date back to milliseconds to create new date, just for creating the part key
     let date = new Date(timestamp / 1000);
-    let key = (date.getTime()) + deviceId;
+    let key = date.getTime().toString() + deviceId;
 
     // Only one part, just process
     if (data.part[0] === 1 && data.part[1] === 1) {
