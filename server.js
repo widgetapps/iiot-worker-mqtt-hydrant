@@ -46,8 +46,8 @@ client.on('reconnect', function () {
    console.log('Reconnecting to MQTT server...');
 });
 
-client.on('close', function () {
-    console.log('MQTT connection closed.');
+client.on('close', function (err) {
+    console.log('MQTT connection closed: '+ err);
 });
 
 client.on('offline', function () {
