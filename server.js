@@ -149,8 +149,7 @@ function handlePartData(type, amqp, deviceId, data) {
 
     // Convert date back to milliseconds to create new date, just for creating the part key
     let date = new Date(timestamp / 1000);
-    //let key = (date.getTime()) + deviceId;
-    let key = deviceId;
+    let key = (date.getTime()) + deviceId;
 
     // Only one part, just process
     if (data.part[0] === 1 && data.part[1] === 1) {
@@ -192,6 +191,13 @@ function handlePartData(type, amqp, deviceId, data) {
         return;
     }
 
+    if (typeof partBuffer[type][key].parts === 'undefined') {
+        console.log('Parts array missing.');
+        console.log('KEY: ', + key);
+        console.log('PARTS: ' + data.part[0] + ':' + data.part[1]);
+        return;
+    }
+
     // If this is the last part, append and pub values
     if (data.part[0] === partBuffer[type][key].parts) {
         console.log('Last part received. Part ' + data.part[0] + ' with ' + data.value.length + ' values.');
@@ -212,8 +218,8 @@ function handlePartData(type, amqp, deviceId, data) {
 
     // If this is a middle part, just append
     if (data.part[0] < partBuffer[type][key].parts) {
-        console.log('Received part ' + data.part[0] + ' of ' + data.part[1] + ' parts with ' + data.value.length + ' values.');
-        console.log('KEY: ' + key);
+        // console.log('Received part ' + data.part[0] + ' of ' + data.part[1] + ' parts with ' + data.value.length + ' values.');
+        // console.log('KEY: ' + key);
         partBuffer[type][key].values = partBuffer[type][key].values.concat(data.value);
 
         //console.log('Updated number of values: ' + pressureEventBuffer[key].values.length);
