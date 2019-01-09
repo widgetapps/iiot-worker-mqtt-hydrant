@@ -43,11 +43,11 @@ client.on('connect', function () {
 });
 
 client.on('reconnect', function () {
-   console.log('Reconnecting to MQTT server...');
+   // console.log('Reconnecting to MQTT server...');
 });
 
 client.on('close', function () {
-    console.log('MQTT connection closed.');
+    // console.log('MQTT connection closed.');
 });
 
 client.on('offline', function () {
