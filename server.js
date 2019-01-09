@@ -150,6 +150,7 @@ function handlePartData(type, amqp, deviceId, data) {
     // Convert date back to milliseconds to create new date, just for creating the part key
     let date = new Date(timestamp / 1000);
     let key = date.getTime().toString() + deviceId;
+    console.log('BUILDING KEY FOR PART '+ data.part[0] + ' OF ' + data.part[1] + ': ' + date.getTime().toString() + ' ' + deviceId);
 
     // Only one part, just process
     if (data.part[0] === 1 && data.part[1] === 1) {
@@ -192,9 +193,9 @@ function handlePartData(type, amqp, deviceId, data) {
     }
 
     if (typeof partBuffer[type][key] === 'undefined') {
-        console.log('Parts array missing.');
-        console.log('KEY: ', + key);
-        console.log('PARTS: ' + data.part[0] + ':' + data.part[1]);
+        //console.log('Parts array missing.');
+        //console.log('KEY: ', + key);
+        //console.log('PARTS: ' + data.part[0] + ':' + data.part[1]);
         return;
     }
 
