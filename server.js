@@ -45,7 +45,7 @@ client.on('connect', function () {
 });
 
 client.on('reconnect', function () {
-   //console.log('Reconnecting to MQTT server...');
+   console.log('Reconnecting to MQTT server...');
 });
 
 client.on('close', function () {
@@ -53,13 +53,13 @@ client.on('close', function () {
 });
 
 client.on('offline', function () {
-    // console.log('MQTT client went offline.');
+    console.log('MQTT client went offline.');
 });
 
 client.on('message', function (topic, message) {
     let [deviceId, version, type] = topic.split('/');
 
-    console.log('Message received, topic is: ' + topic);
+    // console.log('Message received, topic is: ' + topic);
 
     //console.log('Message from device ' + deviceId + ' of type ' + type);
 
@@ -159,7 +159,7 @@ function handlePartData(type, amqp, deviceId, data) {
 
     // Only one part, just process
     if (data.part[0] === 1 && data.part[1] === 1) {
-        console.log('Single part data received.');
+        // console.log('Single part data received.');
         if (key in partBuffer[type]) {
             //delete partBuffer[type][key];
         }
@@ -180,7 +180,7 @@ function handlePartData(type, amqp, deviceId, data) {
     // If this is the first part, create the array element
     if (data.part[0] === 1) {
         console.log('First part received. Part ' + data.part[0] + ' with ' + data.value.length + ' values.');
-        console.log('KEY: ' + key);
+        // console.log('KEY: ' + key);
         if (key in partBuffer[type]) {
             //delete partBuffer[type][key];
         }
@@ -198,7 +198,7 @@ function handlePartData(type, amqp, deviceId, data) {
 
     if (typeof partBuffer[type][key] === 'undefined') {
         console.log('Parts array missing. Part ' + data.part[0] + ' with ' + data.value.length + ' values.');
-        console.log('TYPE: ' + type + ' -- KEY: ' + key);
+        // console.log('TYPE: ' + type + ' -- KEY: ' + key);
         //console.log('PARTS: ' + data.part[0] + ':' + data.part[1]);
         return;
     }
@@ -206,7 +206,7 @@ function handlePartData(type, amqp, deviceId, data) {
     // If this is the last part, append and pub values
     if (data.part[0] === partBuffer[type][key].parts) {
         console.log('Last part received. Part ' + data.part[0] + ' with ' + data.value.length + ' values.');
-        console.log('KEY: ' + key);
+        // console.log('KEY: ' + key);
 
         partBuffer[type][key].values = partBuffer[type][key].values.concat(data.value);
 
@@ -220,7 +220,7 @@ function handlePartData(type, amqp, deviceId, data) {
     // If this is a middle part, just append
     if (data.part[0] < partBuffer[type][key].parts) {
         console.log('Received part ' + data.part[0] + ' of ' + data.part[1] + ' parts with ' + data.value.length + ' values.');
-        console.log('KEY: ' + key);
+        // console.log('KEY: ' + key);
         partBuffer[type][key].values = partBuffer[type][key].values.concat(data.value);
 
         //console.log('Updated number of values: ' + pressureEventBuffer[key].values.length);
@@ -239,7 +239,7 @@ function queuePartData(type, amqp, deviceId, key) {
     Device.findOne({ serialNumber: deviceId })
         .populate('client')
         .exec(function (err, device) {
-            //console.log('Device queried: ' + deviceId);
+            console.log('Device queried: ' + deviceId);
             if (!device || err) {
                 console.log('Device not found');
                 return;
