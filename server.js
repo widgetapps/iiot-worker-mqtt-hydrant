@@ -39,15 +39,15 @@ client.on('error', function (error) {
 client.on('connect', function () {
     console.log('Connected to MQTT server: ' + config.mqtt);
     // Subscribe to hydrant pubs
-    client.subscribe(['+/v1/pressure', '+/v1/temperature', '+/v1/battery', '+/v1/reset', '+/v1/location', '+/v1/pressure-event', '+/v1/rssi', '+/v1/hydrophone']);
+    client.subscribe(['+/v1/pressure', '+/v1/temperature', '+/v1/battery', '+/v1/reset', '+/v1/location', '+/v1/pressure-event', '+/v1/rssi', '+/v1/hydrophone'], {qos: 2});
 });
 
 client.on('reconnect', function () {
    console.log('Reconnecting to MQTT server...');
 });
 
-client.on('close', function (err) {
-    console.log('MQTT connection closed: '+ err);
+client.on('close', function () {
+    console.log('MQTT connection closed.');
 });
 
 client.on('offline', function () {
