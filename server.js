@@ -156,7 +156,7 @@ function handlePartData(type, amqp, deviceId, data) {
     // Only one part, just process
     if (data.part[0] === 1 && data.part[1] === 1) {
         if (key in partBuffer[type]) {
-            delete partBuffer[type][key];
+            //delete partBuffer[type][key];
         }
 
         partBuffer[type][key] = {
@@ -177,7 +177,7 @@ function handlePartData(type, amqp, deviceId, data) {
         console.log('First part received. Part ' + data.part[0] + ' with ' + data.value.length + ' values.');
         console.log('KEY: ' + key);
         if (key in partBuffer[type]) {
-            delete partBuffer[type][key];
+            //delete partBuffer[type][key];
         }
 
         partBuffer[type][key] = {
