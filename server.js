@@ -9,11 +9,10 @@ let config = require('./config'),
     _ = require('lodash'),
     mqtt = require('mqtt'),
     cbor = require('cbor'),
+    redis = require('redis'),
     microdate = require('./lib/microdate'),
-    Device   = require('@terepac/terepac-models').Device,
-    Asset    = require('@terepac/terepac-models').Asset,
-    Sensor   = require('@terepac/terepac-models').Sensor,
-    Location = require('@terepac/terepac-models').Location;
+    topicSinglepart = require('./lib/topic-singlepart'),
+    topicMultipart = require('./lib/topic-multipart');
 
 mongoose.Promise = global.Promise;
 mongoose.connect(config.db, config.dbOptions, function(err) {
@@ -28,10 +27,17 @@ config.mqttoptions.clientId += Math.floor(Math.random() * 10000);
 
 let client  = mqtt.connect(config.mqtt, config.mqttoptions);
 let amqp = require('amqplib').connect(config.amqp);
-
-let partBuffer = {'h': [], 'p': []};
+let redisClient = redis.createClient(6379, '10.240.0.19');
 
 console.log('Started on IP ' + config.ip + '. NODE_ENV=' + process.env.NODE_ENV);
+
+redisClient.on('connect', function() {
+    console.log('Redis client connected');
+});
+
+redisClient.on('error', function (err) {
+    console.log('Error connecting to Redis server: ' + err);
+});
 
 client.on('error', function (error) {
     console.log('Error connecting to MQTT Server with username ' + config.mqttoptions.username + ' - ' + error);
@@ -40,8 +46,17 @@ client.on('error', function (error) {
 
 client.on('connect', function () {
     console.log('Connected to MQTT server: ' + config.mqtt);
-    // Subscribe to hydrant pubs
-    client.subscribe(['+/v1/pressure', '+/v1/temperature', '+/v1/battery', '+/v1/reset', '+/v1/location', '+/v1/pressure-event', '+/v1/rssi', '+/v1/hydrophone'], {qos: 2});
+    // Subscribe to hydrant pubs, use $share/workers/ prefix to enable round robin shared subscription
+    client.subscribe([
+        '$share/workers/+/v1/pressure',
+        '$share/workers/+/v1/temperature',
+        '$share/workers/+/v1/battery',
+        '$share/workers/+/v1/reset',
+        '$share/workers/+/v1/location',
+        '$share/workers/+/v1/pressure-event',
+        '$share/workers/+/v1/rssi',
+        '$share/workers/+/v1/hydrophone'
+    ], {qos: 2});
 });
 
 client.on('reconnect', function () {
@@ -57,7 +72,7 @@ client.on('offline', function () {
 });
 
 client.on('message', function (topic, message) {
-    let [deviceId, version, type] = topic.split('/');
+    let [topicId, version, type] = topic.split('/');
 
     console.log('Message received, topic is: ' + topic);
 
@@ -95,7 +110,7 @@ client.on('message', function (topic, message) {
                 data.avg     = decoded.avg;
                 data.point   = decoded.value;
                 data.samples = decoded.n;
-                handleData(amqp, data, deviceId);
+                topicSinglepart.handleData(amqp, data, topicId);
                 break;
             case 'temperature':
                 data.sensorType = 2;
@@ -104,7 +119,7 @@ client.on('message', function (topic, message) {
                 data.avg     = null;
                 data.point   = decoded.value;
                 data.samples = null;
-                handleData(amqp, data, deviceId);
+                topicSinglepart.handleData(amqp, data, topicId);
                 break;
             case 'battery':
                 data.sensorType = 4;
@@ -113,7 +128,7 @@ client.on('message', function (topic, message) {
                 data.avg     = null;
                 data.point   = decoded.value;
                 data.samples = null;
-                handleData(amqp, data, deviceId);
+                topicSinglepart.handleData(amqp, data, topicId);
                 break;
             case 'rssi':
                 data.sensorType = 10;
@@ -122,426 +137,23 @@ client.on('message', function (topic, message) {
                 data.avg     = decoded.avg;
                 data.point   = decoded.value;
                 data.samples = decoded.n;
-                handleData(amqp, data, deviceId);
+                topicSinglepart.handleData(amqp, data, topicId);
                 break;
             case 'reset':
-                deviceResetLog(deviceId, decoded);
+                topicSinglepart.deviceResetLog(topicId, decoded);
                 break;
             case 'location':
-                updateGeolocation(deviceId, decoded.latitude, decoded.longitude);
+                topicSinglepart.updateGeolocation(topicId, decoded.latitude, decoded.longitude);
                 break;
             case 'pressure-event':
-                handlePartData('p', amqp, deviceId, decoded);
+                topicMultipart.handlePartData('p', amqp, topicId, decoded);
                 break;
             case 'hydrophone':
-                handlePartData('h', amqp, deviceId, decoded);
+                topicMultipart.handlePartData('h', amqp, topicId, decoded);
                 break;
         }
     });
 });
-
-function handlePartData(type, amqp, deviceId, data) {
-
-    console.log('Part data of type ' + type + ' received. Part ' + data.part[0] + ' of ' + data.part[1]);
-
-    let validTypes = ['h', 'p'];
-
-    if (!validTypes.includes(type)) {
-        return;
-    }
-
-    let timestamp = microdate.parseISOString(data.date.toISOString());
-
-    // Convert date back to milliseconds to create new date, just for creating the part key
-    let date = new Date(timestamp / 1000);
-    let key = date.getTime().toString() + deviceId;
-    // console.log('BUILDING KEY FOR PART '+ data.part[0] + ' OF ' + data.part[1] + ': ' + date.getTime().toString() + ' ' + deviceId + ' -- ' + key);
-
-    // Only one part, just process
-    if (data.part[0] === 1 && data.part[1] === 1) {
-        // console.log('Single part data received.');
-        if (key in partBuffer[type]) {
-            //delete partBuffer[type][key];
-        }
-
-        partBuffer[type][key] = {
-            'sample-rate': data['sample-rate'],
-            parts: data.part[1],
-            timestamp: timestamp,
-            deviceId: deviceId,
-            values: data.value
-        };
-
-        queuePartData(type, amqp, deviceId, key);
-
-        return;
-    }
-
-    // If this is the first part, create the array element
-    if (data.part[0] === 1) {
-        console.log('First part received. Part ' + data.part[0] + ' with ' + data.value.length + ' values.');
-        // console.log('KEY: ' + key);
-        if (key in partBuffer[type]) {
-            //delete partBuffer[type][key];
-        }
-
-        partBuffer[type][key] = {
-            'sample-rate': data['sample-rate'],
-            parts: data.part[1],
-            timestamp: timestamp,
-            deviceId: deviceId,
-            values: data.value
-        };
-
-        return;
-    }
-
-    if (typeof partBuffer[type][key] === 'undefined') {
-        console.log('Parts array missing. Part ' + data.part[0] + ' with ' + data.value.length + ' values.');
-        // console.log('TYPE: ' + type + ' -- KEY: ' + key);
-        //console.log('PARTS: ' + data.part[0] + ':' + data.part[1]);
-        return;
-    }
-
-    // If this is the last part, append and pub values
-    if (data.part[0] === partBuffer[type][key].parts) {
-        console.log('Last part received. Part ' + data.part[0] + ' with ' + data.value.length + ' values.');
-        // console.log('KEY: ' + key);
-
-        partBuffer[type][key].values = partBuffer[type][key].values.concat(data.value);
-
-        //console.log('Updated number of values: ' + pressureEventBuffer[key].values.length);
-
-        queuePartData(type, amqp, deviceId, key);
-
-        return;
-    }
-
-    // If this is a middle part, just append
-    if (data.part[0] < partBuffer[type][key].parts) {
-        console.log('Received part ' + data.part[0] + ' of ' + data.part[1] + ' parts with ' + data.value.length + ' values.');
-        // console.log('KEY: ' + key);
-        partBuffer[type][key].values = partBuffer[type][key].values.concat(data.value);
-
-        //console.log('Updated number of values: ' + pressureEventBuffer[key].values.length);
-
-        return;
-    }
-}
-
-function queuePartData(type, amqp, deviceId, key) {
-    // No key, do nothing
-    if (!(key in partBuffer[type])) {
-        return;
-    }
-
-    // TODO: Update this to use the deviceId field and nor serialNumber
-    Device.findOne({ serialNumber: deviceId })
-        .populate('client')
-        .exec(function (err, device) {
-            console.log('Device queried: ' + deviceId);
-            if (!device || err) {
-                console.log('Device not found');
-                return;
-            }
-
-            amqp.then (function(conn) {
-                //console.log('AMQP connection established');
-                return conn.createChannel();
-            }).then (function(ch) {
-
-                let assetPromise = Asset.findById(device.asset).populate('location').exec();
-
-                assetPromise.then(function (asset) {
-                    let eventId = mongoose.Types.ObjectId();
-                    let docPromise = buildPartDocs(type, asset, device, key, eventId);
-
-                    docPromise.then(function (result) {
-                        //console.log('Sending data to queue...');
-
-                        let documents = result.documents;
-                        let sensor = result.sensor;
-                        let ex = 'telemetry';
-                        let ok = ch.assertExchange(ex, 'direct', {durable: true});
-                        return ok.then(function() {
-
-                            documents.forEach(function (document) {
-                                ch.publish(ex, 'event_telemetry', Buffer.from(JSON.stringify(document)), {persistent: true});
-                                // console.log(JSON.stringify(document));
-                            });
-
-                            let eventdoc = {
-                                _id: eventId,
-                                start: new Date(documents[0].timestamp / 1000),
-                                end: new Date(documents[documents.length - 1].timestamp / 1000),
-                                count: documents.length,
-                                description: sensor.typeString + ' event',
-                                tag: {
-                                    full: asset.location.tagCode + '_' + asset.tagCode + '_' + sensor.tagCode,
-                                    clientTagCode: device.client.tagCode,
-                                    locationTagCode: asset.location.tagCode,
-                                    assetTagCode: asset.tagCode,
-                                    sensorTagCode: sensor.tagCode
-                                },
-                                asset: asset._id,
-                                device: device._id,
-                                sensor: sensor._id,
-                                client: device.client._id
-                            };
-                            ch.publish(ex, 'event', Buffer.from(JSON.stringify(eventdoc)), {persistent: true});
-                            // console.log(eventdoc);
-
-                            // Done processing, delete the key
-                            if (key in partBuffer[type]) {
-                                delete partBuffer[type][key];
-                            }
-
-                            return ch.close();
-                        }).catch(console.warn);
-                    }).catch(console.warn);
-                }).catch(console.warn);
-
-            }).catch(console.warn);
-
-        });
-}
-
-function buildPartDocs(type, asset, device, key, eventId) {
-
-    // partBuffer[type][key].timestamp is in microseconds
-    let timestamp = partBuffer[type][key].timestamp;
-
-    let sampleRate;
-
-    // Default sensor type to pressure (1)
-    let sensorType = 1;
-    if (type === 'h') {
-        sensorType = 11;
-    }
-
-    // TODO: Gotta fix this sample rate
-    // Convert partBuffer[type][key]['sample-rate'] to microseconds
-    if (partBuffer[type][key]['sample-rate'] && isNaN(partBuffer[type][key]['sample-rate'][0]) && isNaN(partBuffer[type][key]['sample-rate'][1])) {
-        // Default to 100 milliseconds, sampleRate is in microseconds
-        sampleRate = 100000;
-    } else {
-        sampleRate = (1000 / (partBuffer[type][key]['sample-rate'][0] / partBuffer[type][key]['sample-rate'][1])) * 1000;
-    }
-
-    let promise = Sensor.findOne({ type: sensorType }).exec();
-    return promise.then(function (sensor) {
-
-        let documents = [];
-        let document;
-
-        // console.log('Building documents for buffer key ' + key);
-        // console.log('Number of documents to process: ' + partBuffer[type][key].values.length);
-
-        for (let i=0; i < partBuffer[type][key].values.length; i++) {
-
-            document = {
-                timestamp: timestamp,
-                tag: {
-                    full: asset.location.tagCode + '_' + asset.tagCode + '_' + sensor.tagCode,
-                    clientTagCode: device.client.tagCode,
-                    locationTagCode: asset.location.tagCode,
-                    assetTagCode: asset.tagCode,
-                    sensorTagCode: sensor.tagCode
-                },
-                asset: {
-                    _id: asset._id,
-                    tagCode: asset.tagCode,
-                    name: asset.name,
-                    description: asset.description,
-                    location: {
-                        tagCode: asset.location.tagCode,
-                        description: asset.location.description,
-                        geolocation: asset.location.geolocation.coordinates
-                    }
-                },
-                device: {
-                    _id: device._id,
-                    serialNumber: device.serialNumber,
-                    type: device.type,
-                    description: device.description
-                },
-                sensor: {
-                    _id: sensor._id,
-                    type: sensor.type,
-                    typeString: sensor.typeString,
-                    description: sensor.description,
-                    unit: sensor.unit
-                },
-                client: device.client._id,
-                event: eventId,
-                data: {
-                    unit: sensor.unit,
-                    value: partBuffer[type][key].values[i]
-                }
-            };
-
-            documents.push(document);
-
-            timestamp += sampleRate;
-        }
-
-        return {documents: documents, sensor: sensor};
-    });
-}
-
-function handleData(amqp, data, deviceId) {
-    //console.log('Querying the deviceId ' + deviceId);
-
-    Device.findOne({ serialNumber: deviceId })
-        .populate('client')
-        .exec(function (err, device) {
-            //console.log('Device queried: ' + deviceId);
-            if (!device || err) {
-                console.log('Device not found');
-                return;
-            }
-
-            queueDatabase(amqp, device, data);
-        });
-}
-
-
-function queueDatabase(amqp, device, data) {
-
-    // console.log('Queueing data: ' + JSON.stringify(data));
-
-    amqp.then (function(conn) {
-        //console.log('AMQP connection established');
-        return conn.createChannel();
-    }).then (function(ch) {
-
-        let assetPromise = Asset.findById(device.asset).populate('location').exec();
-
-        assetPromise.then(function (asset) {
-            //console.log('Sending data to queue...');
-
-            let ex = 'telemetry';
-            let ok = ch.assertExchange(ex, 'direct', {durable: true});
-            return ok.then(function() {
-                buildMessage(asset, device, data, function(document){
-
-                    ch.publish(ex, 'telemetry', Buffer.from(JSON.stringify(document)), {persistent: true});
-                    // console.log(JSON.stringify(document));
-
-                    return ch.close();
-                });
-            }).catch(console.warn);
-        }).catch(console.warn);
-
-    }).catch(console.warn);
-}
-
-function buildMessage(asset, device, data, callback) {
-
-    let promise = Sensor.findOne({ type: data.sensorType }).exec();
-    promise.then(function (sensor) {
-
-        let document = {
-            timestamp: new Date(data.timestamp / 1000),
-            tag: {
-                full: asset.location.tagCode + '_' + asset.tagCode + '_' + sensor.tagCode,
-                clientTagCode: device.client.tagCode,
-                locationTagCode: asset.location.tagCode,
-                assetTagCode: asset.tagCode,
-                sensorTagCode: sensor.tagCode
-            },
-            asset: {
-                _id: asset._id,
-                tagCode: asset.tagCode,
-                name: asset.name,
-                description: asset.description,
-                location: {
-                    tagCode: asset.location.tagCode,
-                    description: asset.location.description,
-                    geolocation: asset.location.geolocation.coordinates
-                }
-            },
-            device: {
-                _id: device._id,
-                serialNumber: device.serialNumber,
-                type: device.type,
-                description: device.description
-            },
-            sensor: {
-                _id: sensor._id,
-                type: sensor.type,
-                typeString: sensor.typeString,
-                description: sensor.description,
-                unit: sensor.unit
-            },
-            client: device.client._id,
-            data: {
-                unit: sensor.unit,
-                values: {
-                    min: data.min,
-                    max: data.max,
-                    average: data.avg,
-                    point: data.point,
-                    samples: data.samples
-                }
-            }
-        };
-
-        callback(document);
-
-    });
-
-}
-
-function updateGeolocation(deviceId, latitude, longitude) {
-
-    Device.findOneAndUpdate(
-        { serialNumber: deviceId },
-        {
-            $set: {
-                'geolocation.coordinates': [latitude, longitude]
-            }
-        },
-        {new: true}, function(err, device) {
-            if (!device || err) {
-                console.log('No device found: ' + err);
-                return;
-            }
-
-            if (device.location === null) return;
-
-            Location.findByIdAndUpdate(device.location,
-                {
-                    $set: {
-                        updated: new Date(),
-                        'geolocation.coordinates': [latitude, longitude]
-                    }
-                }, function (err, location) {
-                    if (!location || err) {
-                        console.log('Error updating the location coordinates: ' + err);
-                    }
-                }
-            )
-        }
-    );
-}
-
-function deviceResetLog(deviceId, data) {
-    // TODO: Need to decide what the max log entries will be. Maybe 10? Could be a setting.
-    Device.findOneAndUpdate(
-        { serialNumber: deviceId },
-        {
-            updated: new Date(),
-            $push: { resets: data  }
-            },
-        function (error, success) {
-            if (error) {
-                //console.log(error);
-            } else {
-                //console.log(success);
-            }
-        });
-}
 
 /**
  * Handle the different ways an application can shutdown
