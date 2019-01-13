@@ -75,7 +75,7 @@ client.on('offline', function () {
 client.on('message', function (topic, message) {
     let [topicId, version, type] = topic.split('/');
 
-    // util.log_debug(config.mqttoptions.clientId, 'Message received, topic is: ' + topic);
+    util.log_debug(config.mqttoptions.clientId, 'Message received, topic is: ' + topic);
 
     // util.log_debug(config.mqttoptions.clientId, 'Message from topic ' + topicId + ' of type ' + type);
 
@@ -147,6 +147,7 @@ client.on('message', function (topic, message) {
                 topicSinglepart.updateGeolocation(topicId, decoded.latitude, decoded.longitude, config.mqttoptions.clientId);
                 break;
             case 'pressure-event':
+                util.log_debug(clientId, 'Pressure event detected: ' + decoded.part[0] + ' of ' + decoded.part[1]);
                 topicMultipart.handlePartData(redisClient, 'p', amqp, topicId, decoded, config.mqttoptions.clientId);
                 break;
             case 'hydrophone':
