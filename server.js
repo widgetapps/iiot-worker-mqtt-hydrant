@@ -60,6 +60,18 @@ client.on('connect', function () {
     ], {qos: 2});
 
     client.subscribe([
+        '$share/workers/+/v1/pressure',
+        '$share/workers/+/v1/temperature',
+        '$share/workers/+/v1/battery',
+        '$share/workers/+/v1/reset',
+        '$share/workers/+/v1/location',
+        '$share/workers/+/v1/pressure-event',
+        '$share/workers/+/v1/rssi',
+        '$share/workers/+/v1/hydrophone'
+    ], {qos: 2});
+
+    /*
+    client.subscribe([
         '+/v1/pressure',
         '+/v1/temperature',
         '+/v1/battery',
@@ -68,7 +80,7 @@ client.on('connect', function () {
         '+/v1/pressure-event',
         '+/v1/rssi',
         '+/v1/hydrophone'
-    ], {qos: 2});
+    ], {qos: 2}); */
 });
 
 client.on('reconnect', function () {
