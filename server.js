@@ -23,11 +23,11 @@ mongoose.connect(config.db, config.dbOptions, function(err) {
     }
 });
 
-config.mqttoptions.clientId += Math.floor(Math.random() * 10000);
+config.mqttoptions.clientId += '_' + process.pid;
 
 let client  = mqtt.connect(config.mqtt, config.mqttoptions);
 let amqp = require('amqplib').connect(config.amqp);
-let redisClient = redis.createClient(6379, '10.240.0.19');
+let redisClient = redis.createClient(config.redis);
 
 console.log('Started on IP ' + config.ip + '. NODE_ENV=' + process.env.NODE_ENV);
 
@@ -75,6 +75,8 @@ client.on('message', function (topic, message) {
     let [topicId, version, type] = topic.split('/');
 
     console.log('Message received, topic is: ' + topic);
+
+    return;
 
     //console.log('Message from device ' + deviceId + ' of type ' + type);
 

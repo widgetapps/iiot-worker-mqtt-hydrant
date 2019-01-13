@@ -9,5 +9,6 @@ module.exports = {
     dbOptions: { useNewUrlParser: true },
     ip: process.env.IP || '127.0.0.1',
     mqtt: process.env.MQTT || 'mqtts://mqtt.terepac.one:8883',
-    amqp: process.env.AMQP || 'amqp://localhost'
+    amqp: process.env.AMQP || 'amqp://localhost',
+    redis: process.env.REDIS || 'redis://10.240.0.19/1'
 };
