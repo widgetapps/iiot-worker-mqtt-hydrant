@@ -49,6 +49,7 @@ client.on('connect', function () {
     console.log('Connected to MQTT server: ' + config.mqtt);
     // Subscribe to hydrant pubs, use $share/workers/ prefix to enable round robin shared subscription
 
+    /*
     client.subscribe([
         '$queue/+/v1/pressure',
         '$queue/+/v1/temperature',
@@ -58,9 +59,8 @@ client.on('connect', function () {
         '$queue/+/v1/pressure-event',
         '$queue/+/v1/rssi',
         '$queue/+/v1/hydrophone'
-    ], {qos: 2});
+    ], {qos: 2}); */
 
-    /*
     client.subscribe([
         '$share/workers/+/v1/pressure',
         '$share/workers/+/v1/temperature',
@@ -72,6 +72,7 @@ client.on('connect', function () {
         '$share/workers/+/v1/hydrophone'
     ], {qos: 2});
 
+    /*
     client.subscribe([
         '+/v1/pressure',
         '+/v1/temperature',
