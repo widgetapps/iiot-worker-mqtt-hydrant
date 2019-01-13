@@ -147,10 +147,10 @@ client.on('message', function (topic, message) {
                 topicSinglepart.updateGeolocation(topicId, decoded.latitude, decoded.longitude, config.mqttoptions.clientId);
                 break;
             case 'pressure-event':
-                // topicMultipart.handlePartData('p', amqp, topicId, decoded, config.mqttoptions.clientId);
+                topicMultipart.handlePartData('p', amqp, topicId, decoded, config.mqttoptions.clientId);
                 break;
             case 'hydrophone':
-                // topicMultipart.handlePartData('h', amqp, topicId, decoded, config.mqttoptions.clientId);
+                topicMultipart.handlePartData('h', amqp, topicId, decoded, config.mqttoptions.clientId);
                 break;
         }
     });
