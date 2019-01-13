@@ -5,6 +5,7 @@ require('./init')();
 console.log('Version: ' + process.version);
 
 let config = require('./config'),
+    util = require('./lib/util'),
     mongoose = require('mongoose'),
     _ = require('lodash'),
     mqtt = require('mqtt'),
@@ -48,26 +49,6 @@ client.on('connect', function () {
     console.log('Connected to MQTT server: ' + config.mqtt);
     // Subscribe to hydrant pubs, use $share/workers/ prefix to enable round robin shared subscription
     client.subscribe([
-        '$share/workers/+/v1/pressure',
-        '$share/workers/+/v1/temperature',
-        '$share/workers/+/v1/battery',
-        '$share/workers/+/v1/reset',
-        '$share/workers/+/v1/location',
-        '$share/workers/+/v1/pressure-event',
-        '$share/workers/+/v1/rssi',
-        '$share/workers/+/v1/hydrophone'
-    ], {qos: 2});
-    client.subscribe([
-        '+/v1/pressure',
-        '+/v1/temperature',
-        '+/v1/battery',
-        '+/v1/reset',
-        '+/v1/location',
-        '+/v1/pressure-event',
-        '+/v1/rssi',
-        '+/v1/hydrophone'
-    ], {qos: 2});
-    client.subscribe([
         '$queue/+/v1/pressure',
         '$queue/+/v1/temperature',
         '$queue/+/v1/battery',
@@ -94,11 +75,10 @@ client.on('offline', function () {
 client.on('message', function (topic, message) {
     let [topicId, version, type] = topic.split('/');
 
-    log('Message received, topic is: ' + topic);
+    // util.log_debug(config.mqttoptions.clientId, 'Message received, topic is: ' + topic);
 
+    util.log_debug(config.mqttoptions.clientId, 'Message from device ' + deviceId + ' of type ' + type);
     return;
-
-    //console.log('Message from device ' + deviceId + ' of type ' + type);
 
     let validTypes = ['pressure', 'temperature', 'battery','reset', 'location', 'pressure-event', 'rssi', 'hydrophone'];
 
@@ -176,11 +156,6 @@ client.on('message', function (topic, message) {
         }
     });
 });
-
-function log(message) {
-    let date = new Date();
-    console.log(date.toISOString() + ' ' + config.mqttoptions.clientId + '_' + process.pid + ' ' + message);
-}
 
 /**
  * Handle the different ways an application can shutdown
