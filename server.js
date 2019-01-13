@@ -77,8 +77,7 @@ client.on('message', function (topic, message) {
 
     // util.log_debug(config.mqttoptions.clientId, 'Message received, topic is: ' + topic);
 
-    util.log_debug(config.mqttoptions.clientId, 'Message from topic ' + topicId + ' of type ' + type);
-    return;
+    // util.log_debug(config.mqttoptions.clientId, 'Message from topic ' + topicId + ' of type ' + type);
 
     let validTypes = ['pressure', 'temperature', 'battery','reset', 'location', 'pressure-event', 'rssi', 'hydrophone'];
 
@@ -112,7 +111,7 @@ client.on('message', function (topic, message) {
                 data.avg     = decoded.avg;
                 data.point   = decoded.value;
                 data.samples = decoded.n;
-                topicSinglepart.handleData(amqp, data, topicId);
+                topicSinglepart.handleData(amqp, data, topicId, config.mqttoptions.clientId);
                 break;
             case 'temperature':
                 data.sensorType = 2;
@@ -121,7 +120,7 @@ client.on('message', function (topic, message) {
                 data.avg     = null;
                 data.point   = decoded.value;
                 data.samples = null;
-                topicSinglepart.handleData(amqp, data, topicId);
+                topicSinglepart.handleData(amqp, data, topicId, config.mqttoptions.clientId);
                 break;
             case 'battery':
                 data.sensorType = 4;
@@ -130,7 +129,7 @@ client.on('message', function (topic, message) {
                 data.avg     = null;
                 data.point   = decoded.value;
                 data.samples = null;
-                topicSinglepart.handleData(amqp, data, topicId);
+                topicSinglepart.handleData(amqp, data, topicId, config.mqttoptions.clientId);
                 break;
             case 'rssi':
                 data.sensorType = 10;
@@ -139,19 +138,19 @@ client.on('message', function (topic, message) {
                 data.avg     = decoded.avg;
                 data.point   = decoded.value;
                 data.samples = decoded.n;
-                topicSinglepart.handleData(amqp, data, topicId);
+                topicSinglepart.handleData(amqp, data, topicId, config.mqttoptions.clientId);
                 break;
             case 'reset':
-                topicSinglepart.deviceResetLog(topicId, decoded);
+                topicSinglepart.deviceResetLog(topicId, decoded, config.mqttoptions.clientId);
                 break;
             case 'location':
-                topicSinglepart.updateGeolocation(topicId, decoded.latitude, decoded.longitude);
+                topicSinglepart.updateGeolocation(topicId, decoded.latitude, decoded.longitude, config.mqttoptions.clientId);
                 break;
             case 'pressure-event':
-                topicMultipart.handlePartData('p', amqp, topicId, decoded);
+                topicMultipart.handlePartData('p', amqp, topicId, decoded, config.mqttoptions.clientId);
                 break;
             case 'hydrophone':
-                topicMultipart.handlePartData('h', amqp, topicId, decoded);
+                topicMultipart.handlePartData('h', amqp, topicId, decoded, config.mqttoptions.clientId);
                 break;
         }
     });
