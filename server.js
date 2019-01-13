@@ -57,6 +57,16 @@ client.on('connect', function () {
         '$share/workers/+/v1/rssi',
         '$share/workers/+/v1/hydrophone'
     ], {qos: 2});
+    client.subscribe([
+        '+/v1/pressure',
+        '+/v1/temperature',
+        '+/v1/battery',
+        '+/v1/reset',
+        '+/v1/location',
+        '+/v1/pressure-event',
+        '+/v1/rssi',
+        '+/v1/hydrophone'
+    ], {qos: 2});
 });
 
 client.on('reconnect', function () {
