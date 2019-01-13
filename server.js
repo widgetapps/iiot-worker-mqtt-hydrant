@@ -94,7 +94,7 @@ client.on('offline', function () {
 client.on('message', function (topic, message) {
     let [topicId, version, type] = topic.split('/');
 
-    console.log('Message received, topic is: ' + topic);
+    log('Message received, topic is: ' + topic);
 
     return;
 
@@ -176,6 +176,11 @@ client.on('message', function (topic, message) {
         }
     });
 });
+
+function log(message) {
+    let date = new Date();
+    console.log(date.toISOString() + ' ' + config.mqttoptions.clientId + '_' + process.pid + ' ' + message);
+}
 
 /**
  * Handle the different ways an application can shutdown
