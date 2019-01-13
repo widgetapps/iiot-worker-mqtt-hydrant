@@ -77,7 +77,7 @@ client.on('message', function (topic, message) {
 
     // util.log_debug(config.mqttoptions.clientId, 'Message received, topic is: ' + topic);
 
-    util.log_debug(config.mqttoptions.clientId, 'Message from device ' + deviceId + ' of type ' + type);
+    util.log_debug(config.mqttoptions.clientId, 'Message from topic ' + topicId + ' of type ' + type);
     return;
 
     let validTypes = ['pressure', 'temperature', 'battery','reset', 'location', 'pressure-event', 'rssi', 'hydrophone'];
