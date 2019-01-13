@@ -59,6 +59,7 @@ client.on('connect', function () {
         '$queue/+/v1/hydrophone'
     ], {qos: 2});
 
+    /*
     client.subscribe([
         '$share/workers/+/v1/pressure',
         '$share/workers/+/v1/temperature',
@@ -70,7 +71,6 @@ client.on('connect', function () {
         '$share/workers/+/v1/hydrophone'
     ], {qos: 2});
 
-    /*
     client.subscribe([
         '+/v1/pressure',
         '+/v1/temperature',
