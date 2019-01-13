@@ -70,7 +70,7 @@ client.on('connect', function () {
         '$share/workers/+/v1/pressure-event',
         '$share/workers/+/v1/rssi',
         '$share/workers/+/v1/hydrophone'
-    ], {qos: 1});
+    ], {qos: 0});
 
     /*
     client.subscribe([
