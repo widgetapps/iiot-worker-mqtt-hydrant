@@ -67,6 +67,16 @@ client.on('connect', function () {
         '+/v1/rssi',
         '+/v1/hydrophone'
     ], {qos: 2});
+    client.subscribe([
+        '$queue/+/v1/pressure',
+        '$queue/+/v1/temperature',
+        '$queue/+/v1/battery',
+        '$queue/+/v1/reset',
+        '$queue/+/v1/location',
+        '$queue/+/v1/pressure-event',
+        '$queue/+/v1/rssi',
+        '$queue/+/v1/hydrophone'
+    ], {qos: 2});
 });
 
 client.on('reconnect', function () {
