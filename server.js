@@ -89,7 +89,7 @@ client.on('offline', function () {
 client.on('message', function (topic, message) {
     let [topicId, version, type] = topic.split('/');
 
-    // util.log_debug(config.mqttoptions.clientId, 'Message received, topic is: ' + topic);
+    util.log_debug(config.mqttoptions.clientId, 'Message received, topic is: ' + topic);
 
     // util.log_debug(config.mqttoptions.clientId, 'Message from topic ' + topicId + ' of type ' + type);
 
