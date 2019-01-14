@@ -49,7 +49,6 @@ client.on('connect', function () {
     console.log('Connected to MQTT server: ' + config.mqtt);
     // Subscribe to hydrant pubs, use $share/workers/ prefix to enable round robin shared subscription
 
-    /*
     client.subscribe([
         '$share/workers/+/v1/pressure',
         '$share/workers/+/v1/temperature',
@@ -60,8 +59,8 @@ client.on('connect', function () {
         '$share/workers/+/v1/rssi',
         '$share/workers/+/v1/hydrophone'
     ], {qos: 2});
-    */
 
+    /*
     client.subscribe([
         '+/v1/pressure',
         '+/v1/temperature',
@@ -71,7 +70,7 @@ client.on('connect', function () {
         '+/v1/pressure-event',
         '+/v1/rssi',
         '+/v1/hydrophone'
-    ], {qos: 2});
+    ], {qos: 2}); */
 });
 
 client.on('reconnect', function () {
@@ -89,7 +88,7 @@ client.on('offline', function () {
 client.on('message', function (topic, message) {
     let [topicId, version, type] = topic.split('/');
 
-    // util.log_debug(config.mqttoptions.clientId, 'Message received, topic is: ' + topic);
+    util.log_debug(config.mqttoptions.clientId, 'Message received, topic is: ' + topic);
 
     // util.log_debug(config.mqttoptions.clientId, 'Message from topic ' + topicId + ' of type ' + type);
 
