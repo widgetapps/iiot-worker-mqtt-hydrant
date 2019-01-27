@@ -24,7 +24,7 @@ mongoose.connect(config.db, config.dbOptions, function(err) {
     }
 });
 
-config.mqttoptions.clientId += '_' + process.pid;
+config.mqttoptions.clientId += '_' + process.pid + '.' + Math.floor(Math.random() * 1000);
 
 let client  = mqtt.connect(config.mqtt, config.mqttoptions);
 let amqp = require('amqplib').connect(config.amqp);
@@ -70,7 +70,8 @@ client.on('connect', function () {
         '+/v1/location',
         '+/v1/pressure-event',
         '+/v1/rssi',
-        '+/v1/hydrophone'
+        '+/v1/hydrophone',
+        '+/v1/hydrophone-summary'
     ], {qos: 2});
 });
 
@@ -93,7 +94,7 @@ client.on('message', function (topic, message) {
 
     // util.log_debug(config.mqttoptions.clientId, 'Message from topic ' + topicId + ' of type ' + type);
 
-    let validTypes = ['pressure', 'temperature', 'battery','reset', 'location', 'pressure-event', 'rssi', 'hydrophone'];
+    let validTypes = ['pressure', 'temperature', 'battery','reset', 'location', 'pressure-event', 'rssi', 'hydrophone', 'hydrophone-summary'];
 
     if (!_.includes(validTypes, type)) {
         return;
@@ -147,6 +148,15 @@ client.on('message', function (topic, message) {
                 break;
             case 'rssi':
                 data.sensorType = 10;
+                data.min     = decoded.min;
+                data.max     = decoded.max;
+                data.avg     = decoded.avg;
+                data.point   = decoded.value;
+                data.samples = decoded.n;
+                topicSinglepart.handleData(amqp, data, topicId, config.mqttoptions.clientId);
+                break;
+            case 'hydrophone-summary':
+                data.sensorType = 12;
                 data.min     = decoded.min;
                 data.max     = decoded.max;
                 data.avg     = decoded.avg;
