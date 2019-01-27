@@ -157,10 +157,10 @@ client.on('message', function (topic, message) {
                 break;
             case 'hydrophone-summary':
                 data.sensorType = 12;
-                data.min     = decoded.min;
-                data.max     = decoded.max;
-                data.avg     = decoded.avg;
-                data.point   = decoded.value;
+                data.min     = null;
+                data.max     = null;
+                data.avg     = null;
+                data.point   = decoded.rms;
                 data.samples = decoded.n;
                 topicSinglepart.handleData(amqp, data, topicId, config.mqttoptions.clientId);
                 break;
