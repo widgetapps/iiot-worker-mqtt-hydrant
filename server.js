@@ -15,16 +15,16 @@ let config = require('./config'),
     topicSinglepart = require('./lib/topic-singlepart'),
     topicMultipart = require('./lib/topic-multipart');
 
+config.mqttoptions.clientId += '_' + process.pid + '.' + Math.floor(Math.random() * 1000);
+
 mongoose.Promise = global.Promise;
 mongoose.connect(config.db, config.dbOptions, function(err) {
     if (err) {
-        console.log('Error connecting to MongoDB.');
+        util.log_debug(config.mqttoptions.clientId, 'Error connecting to MongoDB.');
     } else {
-        console.log('Connected to MongoDB');
+        util.log_debug(config.mqttoptions.clientId, 'Connected to MongoDB');
     }
 });
-
-config.mqttoptions.clientId += '_' + process.pid + '.' + Math.floor(Math.random() * 1000);
 
 let client  = mqtt.connect(config.mqtt, config.mqttoptions);
 let amqp = require('amqplib').connect(config.amqp);
