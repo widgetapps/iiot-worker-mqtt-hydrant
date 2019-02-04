@@ -30,23 +30,23 @@ let client  = mqtt.connect(config.mqtt, config.mqttoptions);
 let amqp = require('amqplib').connect(config.amqp);
 let redisClient = redis.createClient(config.redis);
 
-console.log('Started on IP ' + config.ip + '. NODE_ENV=' + process.env.NODE_ENV);
+util.log_debug(config.mqttoptions.clientId, 'Started on IP ' + config.ip + '. NODE_ENV=' + process.env.NODE_ENV);
 
 redisClient.on('connect', function() {
-    console.log('Redis client connected');
+    util.log_debug(config.mqttoptions.clientId, 'Redis client connected');
 });
 
 redisClient.on('error', function (err) {
-    console.log('Error connecting to Redis server: ' + err);
+    util.log_debug(config.mqttoptions.clientId, 'Error connecting to Redis server: ' + err);
 });
 
 client.on('error', function (error) {
-    console.log('Error connecting to MQTT Server with username ' + config.mqttoptions.username + ' - ' + error);
+    util.log_debug(config.mqttoptions.clientId, 'Error connecting to MQTT Server with username ' + config.mqttoptions.username + ' - ' + error);
     process.exit(1);
 });
 
 client.on('connect', function () {
-    console.log('Connected to MQTT server: ' + config.mqtt);
+    util.log_debug(config.mqttoptions.clientId, 'Connected to MQTT server: ' + config.mqtt);
     // Subscribe to hydrant pubs, use $share/workers/ prefix to enable round robin shared subscription
 
     /*
@@ -76,21 +76,21 @@ client.on('connect', function () {
 });
 
 client.on('reconnect', function () {
-   console.log('Reconnecting to MQTT server...');
+    util.log_debug(config.mqttoptions.clientId, 'Reconnecting to MQTT server...');
 });
 
 client.on('close', function () {
-    console.log('MQTT connection closed.');
+    util.log_debug(config.mqttoptions.clientId, 'MQTT connection closed.');
 });
 
 client.on('offline', function () {
-    console.log('MQTT client went offline.');
+    util.log_debug(config.mqttoptions.clientId, 'MQTT client went offline.');
 });
 
 client.on('message', function (topic, message) {
     let [topicId, version, type] = topic.split('/');
 
-    util.log_debug(config.mqttoptions.clientId, 'Message received, topic is: ' + topic);
+    // util.log_debug(config.mqttoptions.clientId, 'Message received, topic is: ' + topic);
 
     // util.log_debug(config.mqttoptions.clientId, 'Message from topic ' + topicId + ' of type ' + type);
 
