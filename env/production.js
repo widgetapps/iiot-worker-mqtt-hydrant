@@ -7,7 +7,7 @@ module.exports = {
     mqttoptions: {
         clientId: 'worker_hydrant',
         username: 'worker',
-        keepalive: 0,
+        keepalive: 60,
         clean: true,
         password: process.env.MQTT_PASSWORD || ''
     }
