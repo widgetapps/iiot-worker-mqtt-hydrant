@@ -20,7 +20,7 @@
   "license": "LicenseRef-LICENSE",
   "homepage": "https://bitbucket.org/terepac/terepac-worker-mqtt-hydrant#readme",
   "dependencies": {
-    "@terepac/terepac-models": "^0.7.3",
+    "@terepac/terepac-models": "^0.7.10",
     "amqplib": "^0.5.3",
     "cbor": "^4.1.4",
     "lodash": "^4.17.11",
