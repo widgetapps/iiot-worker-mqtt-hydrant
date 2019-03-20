@@ -163,6 +163,8 @@ client.on('message', function (topic, message) {
                 data.point   = decoded.rms;
                 data.samples = decoded.n;
                 topicSinglepart.handleData(amqp, data, topicId, config.mqttoptions.clientId);
+                let logDate = new Date();
+                console.log('[MQTT-RMS] ' + logDate.toUTCString() + ' ' + message);
                 break;
             case 'reset':
                 topicSinglepart.deviceResetLog(topicId, decoded, config.mqttoptions.clientId);
