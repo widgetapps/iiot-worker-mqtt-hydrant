@@ -8,7 +8,7 @@ module.exports = {
         clientId: 'worker_hydrant',
         username: 'worker',
         keepalive: 60,
-        clean: true,
+        clean: false,
         password: process.env.MQTT_PASSWORD || ''
     }
 };
