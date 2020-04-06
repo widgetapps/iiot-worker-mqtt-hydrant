@@ -189,7 +189,7 @@ client.on('message', function (topic, message) {
 
 function handleAppExit (options, err) {
     if (err) {
-        console.log('App Exit Error: ' + err.stack);
+        console.log(Math.floor(Date.now()/1000) + ': App Exit Error: ' + err);
     }
 
     if (options.cleanup) {
