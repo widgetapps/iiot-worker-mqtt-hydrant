@@ -15,7 +15,8 @@ let config = require('./config'),
     topicSinglepart = require('./lib/topic-singlepart'),
     topicMultipart = require('./lib/topic-multipart');
 
-config.mqttoptions.clientId += '_' + process.pid + '.' + Math.floor(Math.random() * 1000);
+// TODO: Client id needs to be smarter in case of a loss of connection. Need to use the same id after reboot.
+// config.mqttoptions.clientId += '_' + process.pid + '.' + Math.floor(Math.random() * 1000);
 
 mongoose.Promise = global.Promise;
 mongoose.connect(config.db, config.dbOptions, function(err) {
