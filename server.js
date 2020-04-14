@@ -48,19 +48,17 @@ client.on('error', function (error) {
 
 client.on('connect', function (connack) {
 
-    if (!connack.sessionPresent) {
-        client.subscribe([
-            '+/v1/pressure',
-            '+/v1/temperature',
-            '+/v1/battery',
-            '+/v1/reset',
-            '+/v1/location',
-            '+/v1/pressure-event',
-            '+/v1/rssi',
-            '+/v1/hydrophone',
-            '+/v1/hydrophone-summary'
-        ], {qos: 2});
-    }
+    client.subscribe([
+        '+/v1/pressure',
+        '+/v1/temperature',
+        '+/v1/battery',
+        '+/v1/reset',
+        '+/v1/location',
+        '+/v1/pressure-event',
+        '+/v1/rssi',
+        '+/v1/hydrophone',
+        '+/v1/hydrophone-summary'
+    ], {qos: 2});
 
     util.log_debug(config.mqttoptions.clientId, 'Connected to MQTT server: ' + config.mqtt);
     //util.log_debug(config.mqttoptions.clientId, JSON.stringify(connack));
