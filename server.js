@@ -2,7 +2,7 @@
 
 require('./init')();
 
-console.log('Version: ' + process.version);
+console.log('Node Version: ' + process.version);
 
 let config = require('./config'),
     util = require('./lib/util'),
@@ -15,8 +15,12 @@ let config = require('./config'),
     topicSinglepart = require('./lib/topic-singlepart'),
     topicMultipart = require('./lib/topic-multipart');
 
-// TODO: Client id needs to be smarter in case of a loss of connection. Need to use the same id after reboot.
-// config.mqttoptions.clientId += '_' + process.pid + '.' + Math.floor(Math.random() * 1000);
+// Generate unique MQTT Client ID for each server & CPU/instance
+let appInstance = '';
+if (process.env.NODE_APP_INSTANCE) {
+    appInstance = '_' + process.env.NODE_APP_INSTANCE;
+}
+config.mqttoptions.clientId += '_' + process.env.IP + appInstance;
 
 mongoose.Promise = global.Promise;
 mongoose.connect(config.db, config.dbOptions, function(err) {
@@ -48,6 +52,7 @@ client.on('error', function (error) {
 
 client.on('connect', function (connack) {
 
+    /*
     client.subscribe([
         '+/v1/pressure',
         '+/v1/temperature',
@@ -59,23 +64,25 @@ client.on('connect', function (connack) {
         '+/v1/hydrophone',
         '+/v1/hydrophone-summary'
     ], {qos: 2});
+    */
 
     util.log_debug(config.mqttoptions.clientId, 'Connected to MQTT server: ' + config.mqtt);
-    //util.log_debug(config.mqttoptions.clientId, JSON.stringify(connack));
-    // Subscribe to hydrant pubs, use $share/workers/ prefix to enable round robin shared subscription
 
-    /*
+    //util.log_debug(config.mqttoptions.clientId, JSON.stringify(connack));
+
+    // Subscribe to hydrant pubs, use $share/workers/ prefix to enable round robin/random shared subscription
     client.subscribe([
-        '$share/workers/+/v1/pressure',
-        '$share/workers/+/v1/temperature',
-        '$share/workers/+/v1/battery',
-        '$share/workers/+/v1/reset',
-        '$share/workers/+/v1/location',
-        '$share/workers/+/v1/pressure-event',
-        '$share/workers/+/v1/rssi',
-        '$share/workers/+/v1/hydrophone'
+        '$share/workers_hydrant/+/v1/pressure',
+        '$share/workers_hydrant/+/v1/temperature',
+        '$share/workers_hydrant/+/v1/battery',
+        '$share/workers_hydrant/+/v1/reset',
+        '$share/workers_hydrant/+/v1/location',
+        '$share/workers_hydrant/+/v1/pressure-event',
+        '$share/workers_hydrant/+/v1/rssi',
+        '$share/workers_hydrant/+/v1/hydrophone',
+        '$share/workers_hydrant/+/v1/hydrophone-summary'
     ], {qos: 2});
-    */
+
 });
 
 client.on('reconnect', function () {
@@ -191,6 +198,8 @@ client.on('message', function (topic, message) {
  */
 
 function handleAppExit (options, err) {
+    client.end();
+
     if (err) {
         console.log(Math.floor(Date.now()/1000) + ': App Exit Error: ' + JSON.stringify(err));
     }
